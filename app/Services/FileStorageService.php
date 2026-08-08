@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\DocumentVersionModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
+use Config\Mimes;
 use RuntimeException;
 
 /**
@@ -50,10 +51,16 @@ class FileStorageService
             throw new RuntimeException('The uploaded file exceeds the 10 MB size limit.');
         }
 
-        $mimeType  = (string) $file->getClientMimeType();
-        $extension = strtolower((string) $file->getClientExtension());
+        // The whitelist decision is made from the file's own bytes. The browser
+        // also sends a Content-Type and a filename, but both are attacker-
+        // controlled strings; they are kept as metadata only.
+        $mimeType  = $this->detectMimeType($file->getTempName());
+        $extension = strtolower((string) Mimes::guessExtensionFromType($mimeType));
 
-        if (! in_array($mimeType, self::ALLOWED_MIME_TYPES, true) || ! in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
+        if ($mimeType === ''
+            || ! in_array($mimeType, self::ALLOWED_MIME_TYPES, true)
+            || ! in_array($extension, self::ALLOWED_EXTENSIONS, true)
+        ) {
             throw new RuntimeException('Only PDF, JPG, and PNG files are accepted.');
         }
 
@@ -93,5 +100,35 @@ class FileStorageService
         ]);
 
         return $this->documentVersionModel->find($this->documentVersionModel->getInsertID());
+    }
+
+    /**
+     * Returns the MIME type detected from the file's contents, or an empty
+     * string when it cannot be determined.
+     *
+     * Deliberately not `UploadedFile::getMimeType()`: that calls finfo_file()
+     * unguarded, and libmagic on Windows/XAMPP returns false outright for some
+     * inputs -- notably a file whose contents begin with `<?php`, exactly the
+     * upload this whitelist exists to stop. The resulting PHP warning is
+     * promoted to an ErrorException by the framework, so a crafted upload
+     * produced a 500 instead of a clean refusal. Here a failed detection is
+     * simply an unknown type, and an unknown type is refused by the caller.
+     */
+    private function detectMimeType(string $path): string
+    {
+        if (! function_exists('finfo_open')) {
+            return '';
+        }
+
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+
+        if ($finfo === false) {
+            return '';
+        }
+
+        $detected = @finfo_file($finfo, $path);
+        finfo_close($finfo);
+
+        return is_string($detected) ? strtolower($detected) : '';
     }
 }

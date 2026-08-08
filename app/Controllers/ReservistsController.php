@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Models\EducationTrackModel;
+use App\Models\PhysicalFitnessTestModel;
+use App\Models\ProfessionalEligibilityModel;
 use App\Models\PromotionAssessmentModel;
+use App\Models\RankHistoryModel;
 use App\Models\RankModel;
 use App\Models\ReservistModel;
+use App\Models\ReservistTrainingModel;
+use App\Models\TrainingTypeModel;
 use App\Models\UnitModel;
 use CodeIgniter\HTTP\RedirectResponse;
 use RuntimeException;
@@ -125,6 +130,15 @@ class ReservistsController extends BaseController
                 ? $this->educationTrackModel->find($reservist->education_track_id)
                 : null,
             'assessments' => $this->promotionAssessmentModel->historyFor($reservist->id),
+
+            // Service records read by EligibilityService, with the lookup
+            // lists their add-forms need.
+            'trainings'      => (new ReservistTrainingModel())->forReservist($reservist->id),
+            'fitnessTests'   => (new PhysicalFitnessTestModel())->forReservist($reservist->id),
+            'eligibilities'  => (new ProfessionalEligibilityModel())->forReservist($reservist->id),
+            'rankHistory'    => (new RankHistoryModel())->forReservist($reservist->id),
+            'trainingTypes'  => (new TrainingTypeModel())->activeTrainingTypes(),
+            'ranks'          => $this->rankModel->activeRanksOrdered(),
         ]);
     }
 

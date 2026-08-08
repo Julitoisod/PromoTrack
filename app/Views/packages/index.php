@@ -58,7 +58,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script {csp-script-nonce}>
     document.addEventListener('DOMContentLoaded', function () {
         if (window.jQuery && document.getElementById('packagesTable')) {
             jQuery('#packagesTable').DataTable({ order: [] });

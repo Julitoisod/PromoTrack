@@ -21,7 +21,7 @@ $navUser = auth()->user();
                     <i class="bi bi-bell"></i>
                     <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle d-none" id="notificationsBadge">0</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end" id="notificationsList" style="min-width: 320px; max-height: 400px; overflow-y: auto;" aria-labelledby="notificationsToggle">
+                <ul class="dropdown-menu dropdown-menu-end notifications-menu" id="notificationsList" aria-labelledby="notificationsToggle">
                     <li><span class="dropdown-item-text text-muted small">No new notifications.</span></li>
                 </ul>
             </div>

@@ -4,11 +4,11 @@ namespace Config;
 
 use App\Filters\AccountStatusFilter;
 use App\Filters\AuditRequestFilter;
+use App\Filters\CsrfGuard;
 use App\Filters\SecurityHeadersFilter;
 use App\Filters\UnitAccessFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
-use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
 use CodeIgniter\Filters\ForceHTTPS;
 use CodeIgniter\Filters\Honeypot;
@@ -37,7 +37,9 @@ class Filters extends BaseFilters
      * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
-        'csrf'          => CSRF::class,
+        // Same verification as the framework filter; recovers browser
+        // submissions instead of 403-ing them. See App\Filters\CsrfGuard.
+        'csrf'          => CsrfGuard::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,

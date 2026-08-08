@@ -65,10 +65,9 @@ class UnitAccessFilter implements FilterInterface
         $table      = $arguments[0];
         $unitColumn = $arguments[1] ?? 'organizational_unit_id';
 
-        $segments  = $request->getUri()->getSegments();
-        $recordId  = end($segments);
+        $recordId = $this->recordIdFromUri($request);
 
-        if ($recordId === false || ! is_numeric($recordId)) {
+        if ($recordId === null) {
             return;
         }
 
@@ -95,6 +94,30 @@ class UnitAccessFilter implements FilterInterface
                     'errors'  => [],
                 ]);
         }
+    }
+
+    /**
+     * Returns the id of the record being acted on: the first numeric segment
+     * of the URI.
+     *
+     * It used to read the *last* segment, which silently did nothing on every
+     * route that ends in a verb or a sub-resource -- `reservists/12/edit`,
+     * `reservists/12/delete`, `reservists/12/assessments`,
+     * `reservists/12/packages` -- so cross-unit access on those paths was
+     * caught only by the controller's own check, never by this filter. Every
+     * route this filter is attached to names its record with the first numeric
+     * segment; any later number identifies a row in a different table (a
+     * nested record) and must not be looked up in `$table`.
+     */
+    private function recordIdFromUri(RequestInterface $request): ?int
+    {
+        foreach ($request->getUri()->getSegments() as $segment) {
+            if (is_numeric($segment)) {
+                return (int) $segment;
+            }
+        }
+
+        return null;
     }
 
     /**

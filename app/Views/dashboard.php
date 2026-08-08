@@ -76,7 +76,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script {csp-script-nonce}>
     document.addEventListener('DOMContentLoaded', function () {
         var canvas = document.getElementById('packagePipelineChart');
 

@@ -88,6 +88,17 @@ $statusBadge = match ($reservist->status) {
         </div>
     </div>
 
+    <?= view('reservists/_records', [
+        'reservist'     => $reservist,
+        'trainings'     => $trainings,
+        'fitnessTests'  => $fitnessTests,
+        'eligibilities' => $eligibilities,
+        'rankHistory'   => $rankHistory,
+        'trainingTypes' => $trainingTypes,
+        'ranks'         => $ranks,
+        'canEdit'       => $showUser !== null && $showUser->can('reservists.update'),
+    ]) ?>
+
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">

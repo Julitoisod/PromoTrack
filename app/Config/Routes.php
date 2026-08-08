@@ -32,6 +32,15 @@ $routes->group('reservists', ['filter' => 'session'], static function (RouteColl
     $routes->post('(:num)/assessments', 'PromotionAssessmentsController::store/$1', [
         'filter' => ['permission:assessments.compute', 'unit-access:reservists,organizational_unit_id'],
     ]);
+
+    // Service records feeding EligibilityService: trainings, fitness-tests,
+    // eligibilities, rank-history. See ReservistRecordsController::TYPES.
+    $routes->post('(:num)/records/(:segment)', 'ReservistRecordsController::store/$2/$1', [
+        'filter' => ['permission:reservists.update', 'unit-access:reservists,organizational_unit_id'],
+    ]);
+    $routes->post('(:num)/records/(:segment)/(:num)/delete', 'ReservistRecordsController::delete/$2/$1/$3', [
+        'filter' => ['permission:reservists.update', 'unit-access:reservists,organizational_unit_id'],
+    ]);
 });
 
 $routes->post('assessments/(:num)/verify', 'PromotionAssessmentsController::verify/$1', [

@@ -38,6 +38,17 @@ class PhysicalFitnessTestModel extends Model
     protected $skipValidation     = false;
 
     /**
+     * Returns every physical fitness test on file for the reservist, most
+     * recent first.
+     */
+    public function forReservist(int $reservistId): array
+    {
+        return $this->where('reservist_id', $reservistId)
+            ->orderBy('test_date', 'DESC')
+            ->findAll();
+    }
+
+    /**
      * Returns the most recent physical fitness test on file for the
      * reservist, or null when none exists.
      */

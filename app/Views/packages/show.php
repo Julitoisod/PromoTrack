@@ -94,7 +94,7 @@ $statusBadge = match ($status) {
                                 <?php if ($showUser !== null && $showUser->can('documents.upload') && in_array($status, ['draft', 'requirements_incomplete', 'returned_to_unit'], true)): ?>
                                     <form method="post" action="<?= esc(site_url('package-documents/' . $item['id'] . '/upload')) ?>" enctype="multipart/form-data" class="d-inline">
                                         <?= csrf_field() ?>
-                                        <input type="file" name="document" class="form-control form-control-sm d-inline-block" style="width:auto" required>
+                                        <input type="file" name="document" class="form-control form-control-sm d-inline-block w-auto" required>
                                         <button type="submit" class="btn btn-sm btn-primary">Upload</button>
                                     </form>
                                 <?php endif; ?>

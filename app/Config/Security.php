@@ -23,8 +23,11 @@ class Security extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Randomize the CSRF Token for added security.
+     *
+     * Enabled: the token value is masked differently on every render, so the
+     * per-session token below is never transmitted in the clear twice.
      */
-    public bool $tokenRandomize = false;
+    public bool $tokenRandomize = true;
 
     /**
      * --------------------------------------------------------------------------
@@ -70,8 +73,14 @@ class Security extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Regenerate CSRF Token on every submission.
+     *
+     * Disabled: a per-session token, which is what Laravel, Django, and Rails
+     * do. Rotating on every POST meant a second browser tab, a back button, or
+     * a re-submitted form carried a spent token and was refused — punishing
+     * clerks for the app's own token policy rather than stopping an attack.
+     * `$tokenRandomize` above still masks the value on every render.
      */
-    public bool $regenerate = true;
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------
@@ -80,7 +89,12 @@ class Security extends BaseConfig
      *
      * Redirect to previous page with error on failure.
      *
+     * Not consulted by this application: App\Filters\CsrfGuard replaces the
+     * `csrf` filter alias and always recovers browser submissions (in every
+     * environment) while still returning a hard 403 to JSON callers. Left true
+     * so anything reaching the framework filter directly behaves the same way.
+     *
      * @see https://codeigniter4.github.io/userguide/libraries/security.html#redirection-on-failure
      */
-    public bool $redirect = (ENVIRONMENT === 'production');
+    public bool $redirect = true;
 }

@@ -61,3 +61,11 @@ body {
     display: block;
     margin-bottom: 1rem;
 }
+
+/* Moved out of inline style attributes so Content-Security-Policy can keep
+   style-src-attr at 'self' (inline style attributes cannot carry a nonce). */
+.notifications-menu {
+    min-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+}
