@@ -1,0 +1,63 @@
+/* PromoTrack AFP-RF application layout styles */
+
+:root {
+    --pt-sidebar-width: 260px;
+    --pt-navbar-height: 56px;
+}
+
+body {
+    padding-top: var(--pt-navbar-height);
+    background-color: #f4f6f9;
+}
+
+.sidebar {
+    position: fixed;
+    top: var(--pt-navbar-height);
+    left: 0;
+    bottom: 0;
+    width: var(--pt-sidebar-width);
+    overflow-y: auto;
+    z-index: 1020;
+    transition: transform 0.2s ease-in-out;
+}
+
+.main-content {
+    margin-left: var(--pt-sidebar-width);
+    padding: 1.5rem;
+    min-height: calc(100vh - var(--pt-navbar-height));
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+}
+
+.nav-link.disabled {
+    color: #adb5bd !important;
+    cursor: default;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
