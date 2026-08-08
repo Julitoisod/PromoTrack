@@ -30,6 +30,8 @@ use RuntimeException;
  */
 class ReservistsController extends BaseController
 {
+    private const PER_PAGE = 25;
+
     private ReservistModel $reservistModel;
     private UnitModel $unitModel;
     private RankModel $rankModel;
@@ -57,7 +59,13 @@ class ReservistsController extends BaseController
             ? (int) $user->organizational_unit_id
             : null;
 
-        $reservists = $this->reservistModel->listForDisplay($unitScopedId);
+        // Paged in SQL rather than in the browser: a full roster is thousands
+        // of rows and the listing used to ship all of them on every visit.
+        $search = trim((string) ($this->request->getGet('q') ?? ''));
+
+        $reservists = $this->reservistModel
+            ->listQuery($unitScopedId, $search)
+            ->paginate(self::PER_PAGE);
 
         return view('reservists/index', [
             'title'       => 'Reservists',
@@ -66,6 +74,8 @@ class ReservistsController extends BaseController
                 'Reservists' => '',
             ],
             'reservists' => $reservists,
+            'pager'      => $this->reservistModel->pager,
+            'search'     => $search,
         ]);
     }
 

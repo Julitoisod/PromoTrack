@@ -23,6 +23,8 @@ use RuntimeException;
  */
 class PromotionPackagesController extends BaseController
 {
+    private const PER_PAGE = 25;
+
     private PromotionPackageModel $promotionPackageModel;
     private ReservistModel $reservistModel;
     private PromotionRuleModel $promotionRuleModel;
@@ -61,7 +63,10 @@ class PromotionPackagesController extends BaseController
                 'Dashboard' => site_url('/'),
                 'Packages'  => '',
             ],
-            'packages'      => $this->promotionPackageModel->listForDisplay($unitScopedId, $status !== null ? [$status] : null),
+            'packages'      => $this->promotionPackageModel
+                ->listQuery($unitScopedId, $status !== null ? [$status] : null)
+                ->paginate(self::PER_PAGE),
+            'pager'         => $this->promotionPackageModel->pager,
             'currentStatus' => $status,
         ]);
     }

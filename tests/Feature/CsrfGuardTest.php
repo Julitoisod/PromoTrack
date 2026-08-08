@@ -74,6 +74,19 @@ final class CsrfGuardTest extends CIUnitTestCase
         $this->clerk->addGroup('unit_s1_clerk');
     }
 
+    /**
+     * actingAs() writes a real session. Left behind, the next test class opens
+     * with a logged-in "guest" and its authorization cases quietly pass for
+     * the wrong reason.
+     */
+    protected function tearDown(): void
+    {
+        auth()->logout();
+        session()->destroy();
+
+        parent::tearDown();
+    }
+
     public function testSubmissionWithoutATokenWritesNothing(): void
     {
         $this->actingAs($this->clerk);

@@ -87,6 +87,19 @@ class ReservistModel extends Model
      */
     public function listForDisplay(?int $organizationalUnitId): array
     {
+        return $this->listQuery($organizationalUnitId)->findAll();
+    }
+
+    /**
+     * Builds the reservist listing query, scoped to a unit and optionally
+     * narrowed by a search term over name and reservist/serial number.
+     *
+     * Returned unexecuted so the caller can `paginate()` it: the listing used
+     * to `findAll()` every row and let DataTables page it in the browser,
+     * which ships the entire roster on every page view.
+     */
+    public function listQuery(?int $organizationalUnitId, string $search = ''): self
+    {
         $builder = $this->select('reservists.*, ranks.rank_name AS rank_name, organizational_units.unit_name AS unit_name')
             ->join('ranks', 'ranks.id = reservists.current_rank_id', 'left')
             ->join('organizational_units', 'organizational_units.id = reservists.organizational_unit_id', 'left')
@@ -96,6 +109,15 @@ class ReservistModel extends Model
             $builder->where('reservists.organizational_unit_id', $organizationalUnitId);
         }
 
-        return $builder->orderBy('reservists.last_name', 'ASC')->findAll();
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('reservists.last_name', $search)
+                ->orLike('reservists.first_name', $search)
+                ->orLike('reservists.reservist_number', $search)
+                ->orLike('reservists.afp_serial_number', $search)
+                ->groupEnd();
+        }
+
+        return $builder->orderBy('reservists.last_name', 'ASC');
     }
 }

@@ -1,69 +1,134 @@
-# CodeIgniter 4 Application Starter
+# PromoTrack AFP-RF
 
-## What is CodeIgniter?
+Promotion records and workflow tracking for Philippine Army Reserve Force unit staff.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+A reservist's service record is maintained here, evaluated against **versioned** promotion rules, and
+assembled into a promotion package that is routed through a controlled workflow:
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+```
+Unit S1 Clerk → CDC → RCDG → external approving authority (outside the system) → Records Officer
+```
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+The system records what the external authority decided; it never decides on their behalf.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+Full architecture, schema, permission matrix, and workflow state table: [docs/phase1-design.md](docs/phase1-design.md).
 
-## Installation & updates
+---
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Stack
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+| | |
+|---|---|
+| Framework | CodeIgniter 4.7 |
+| PHP | 8.2+ (`intl`, `mbstring`, `mysqlnd`, `fileinfo`) |
+| Database | MySQL / MariaDB, InnoDB, `utf8mb4` |
+| Auth | CodeIgniter Shield (7 groups, permission matrix in `app/Config/AuthGroups.php`) |
+| PDF | Dompdf |
+| Front end | Bootstrap 5.3, DataTables, Chart.js, SweetAlert2 — **vendored** in `public/assets/vendor/` |
+
+There are no CDN dependencies. The Content-Security-Policy restricts scripts and styles to `'self'`,
+and the system is expected to run on an intranet with no outbound internet access. If you add a
+front-end library, vendor it — a CDN `<script>` is silently refused by the browser.
+
+---
 
 ## Setup
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+```bash
+composer install
+cp env .env                     # then edit: baseURL, database credentials, encryption.key
+php spark migrate
+php spark db:seed InitialSeeder     # units, ranks, education tracks, training types, rules
+php spark db:seed AdminUserSeeder   # superadmin account
+php spark db:seed DemoUsersSeeder   # one demo account per role
+php spark serve                     # http://localhost:8080
+```
 
-## Important Change with index.php
+Seeded accounts all use the password `ChangeMe!12345` and **must be changed before any real use**.
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+| Account | Role |
+|---|---|
+| `superadmin@promotrack.local` | Superadmin |
+| `clerk.demo@promotrack.local` | Unit S1 Clerk |
+| `cdc.demo@promotrack.local` | CDC Administrator |
+| `rcdg.demo@promotrack.local` | RCDG Reviewer |
+| `commander.demo@promotrack.local` | Commander / Viewer (read-only) |
+| `records.demo@promotrack.local` | Records Officer |
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+The seeders are not idempotent — re-running `InitialSeeder` on a populated database fails on a
+duplicate unit code. Drop and re-migrate to reseed from scratch.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+---
 
-## Repository Management
+## Tests
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+```bash
+vendor/bin/phpunit --no-coverage
+```
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Feature tests build and drop the schema on `database.tests` (default `promotrack_afprf_test`), so that
+database must exist and the credentials in `.env` must be able to create tables in it.
 
-## Server Requirements
+| Suite | Covers |
+|---|---|
+| `tests/unit/` | Eligibility evaluation, workflow state machine, date arithmetic, upload whitelist |
+| `tests/Feature/AccessControlTest.php` | Cross-unit and cross-role access — the IDOR / privilege-escalation suite required by design §12 |
+| `tests/Feature/CsrfGuardTest.php` | CSRF refusal and its recovery path |
+| `tests/Feature/ReservistRecordsTest.php` | Service-record add/remove and their ownership guards |
+| `tests/Feature/PromotionRuleVersioningTest.php` | That a rule change supersedes rather than overwrites |
+| `tests/Feature/ReservistManagementTest.php` | Reservist CRUD end to end |
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+---
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+## Layout
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+```
+app/
+  Controllers/
+    Admin/            reference data, promotion rules, audit logs, settings + backups
+    CDC/ RCDG/ Records/   the workflow stages
+  Libraries/
+    WorkflowStateMachine.php   the only place a package status may change
+  Services/
+    EligibilityService.php     evaluates a reservist against the rule version in force
+    PackageWorkflowService.php transitions + history + audit, in one transaction
+    FileStorageService.php     upload whitelist, checksum, storage outside public/
+    BackupService.php          mysqldump wrapper; restore is a documented shell command
+  Filters/
+    CsrfGuard.php       refuses like the framework filter, recovers the form
+    UnitAccessFilter.php record-level organizational-unit ownership
+writable/
+  uploads/    package documents — never served directly, always streamed by a controller
+  backups/    database dumps
+```
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+---
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## Conventions worth knowing before changing anything
+
+**Nothing sets `promotion_packages.status` directly.** Every transition goes through
+`WorkflowStateMachine` + `PackageWorkflowService`, which write the status, a
+`package_status_histories` row, and an `audit_logs` row inside one transaction. A controller that
+writes the column itself breaks the audit trail.
+
+**A promotion rule is never edited in place.** Changing a threshold inserts a new
+`promotion_rule_versions` row and expires the previous one. Assessments cite the version that was in
+force when they ran, and that has to stay resolvable afterwards.
+
+**Every threshold is a placeholder.** Time in grade, MLES, fitness thresholds, rank ordering, and
+promotion-order numbering are all marked *REQUIRES OFFICIAL AFP/PHILIPPINE ARMY VALIDATION* in the
+design document. None of them is hard-coded in PHP; they live in `promotion_rule_versions` so they can
+be corrected as data.
+
+**Authorization is enforced more than once, on purpose.** Shield permission → route filter →
+controller check → record ownership. Adding a route without its `permission` filter is caught by
+`AccessControlTest`.
+
+**Uploads are judged by their bytes.** `FileStorageService` uses `finfo`, not the browser's
+`Content-Type` or filename, and treats a failed detection as a refusal.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

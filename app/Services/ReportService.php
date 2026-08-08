@@ -70,6 +70,14 @@ class ReportService
 
     private function renderPdf(string $viewName, array $data): string
     {
+        // Letterhead and footer caveat come from system settings so an
+        // administrator can change them without a code edit; see
+        // Admin\SettingsController::EDITABLE.
+        $data += [
+            'organizationName' => (string) (setting('App.organizationName') ?? 'Philippine Army Reserve Force'),
+            'reportFooterNote' => (string) (setting('App.reportFooterNote') ?? 'For official use only.'),
+        ];
+
         $options = new Options();
         $options->set('isRemoteEnabled', false);
         $options->set('isHtml5ParserEnabled', true);

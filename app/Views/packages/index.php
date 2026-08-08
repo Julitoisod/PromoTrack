@@ -52,6 +52,8 @@
                     </tbody>
                 </table>
             </div>
+
+            <?= $pager->links() ?>
         <?php endif; ?>
     </div>
 </div>
@@ -59,9 +61,15 @@
 
 <?= $this->section('scripts') ?>
 <script {csp-script-nonce}>
+    // Sorting only -- paging is done in SQL (see PromotionPackagesController::index).
     document.addEventListener('DOMContentLoaded', function () {
         if (window.jQuery && document.getElementById('packagesTable')) {
-            jQuery('#packagesTable').DataTable({ order: [] });
+            jQuery('#packagesTable').DataTable({
+                order: [],
+                paging: false,
+                searching: false,
+                info: false,
+            });
         }
     });
 </script>

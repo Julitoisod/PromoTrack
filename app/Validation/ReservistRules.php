@@ -127,4 +127,47 @@ class ReservistRules
 
         return true;
     }
+
+    /**
+     * Confirms no promotion rule already governs this rank pair.
+     *
+     * `promotion_rules` carries a unique index on (from_rank_id, to_rank_id),
+     * which is correct -- one transition, one rule -- but nothing validated it
+     * first, so a duplicate reached MySQL and came back as a 500 rather than
+     * as "a rule for this transition already exists".
+     *
+     * Usage: `unique_rank_transition[from_rank_id]` on the to_rank_id field.
+     * On update, include the row's `id` in the data so it excludes itself.
+     */
+    public function unique_rank_transition(int|string|null $str, ?string $fields = null, array $data = [], ?string &$error = null): bool
+    {
+        if ($str === null || $str === '') {
+            return true;
+        }
+
+        $fromRankId = $data[$fields] ?? null;
+
+        if ($fromRankId === null || $fromRankId === '') {
+            return true;
+        }
+
+        /** @var PromotionRuleModel $ruleModel */
+        $ruleModel = model(PromotionRuleModel::class);
+
+        $builder = $ruleModel
+            ->where('from_rank_id', (int) $fromRankId)
+            ->where('to_rank_id', (int) $str);
+
+        if (! empty($data['id'])) {
+            $builder->where('id !=', (int) $data['id']);
+        }
+
+        if ($builder->first() !== null) {
+            $error = 'A promotion rule for this rank transition already exists.';
+
+            return false;
+        }
+
+        return true;
+    }
 }

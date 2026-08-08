@@ -66,6 +66,41 @@ class PromotionOrderModel extends Model
     }
 
     /**
+     * Promotion orders recorded per month over the last $months months,
+     * including months with none so the trend line has no gaps.
+     *
+     * @return array<string, int> 'YYYY-MM' => count, oldest first
+     */
+    public function monthlyTotals(?int $organizationalUnitId = null, int $months = 12): array
+    {
+        $series = [];
+
+        for ($offset = $months - 1; $offset >= 0; $offset--) {
+            $series[date('Y-m', strtotime("-{$offset} months"))] = 0;
+        }
+
+        $earliest = array_key_first($series) . '-01';
+
+        $builder = $this->builder()
+            ->select("DATE_FORMAT(promotion_orders.created_at, '%Y-%m') AS period, COUNT(*) AS total")
+            ->where('promotion_orders.created_at >=', $earliest)
+            ->groupBy('period');
+
+        if ($organizationalUnitId !== null) {
+            $builder->join('reservists', 'reservists.id = promotion_orders.reservist_id')
+                ->where('reservists.organizational_unit_id', $organizationalUnitId);
+        }
+
+        foreach ($builder->get()->getResultArray() as $row) {
+            if (array_key_exists($row['period'], $series)) {
+                $series[$row['period']] = (int) $row['total'];
+            }
+        }
+
+        return $series;
+    }
+
+    /**
      * Generates the next sequential order number for $year (defaults to
      * the current year), formatted `PO-{year}-{seq}`. Exact AFP
      * promotion-order numbering scheme REQUIRES OFFICIAL AFP/PHILIPPINE

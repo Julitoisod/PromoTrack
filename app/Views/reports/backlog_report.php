@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; }
+        .letterhead { text-align: center; font-size: 12px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+        .report-footer { margin-top: 24px; padding-top: 6px; border-top: 1px solid #999; text-align: center; font-size: 9px; color: #555; }
         h1 { text-align: center; font-size: 16px; margin-bottom: 4px; }
         .subtitle { text-align: center; font-size: 10px; color: #555; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; margin-top: 16px; }
@@ -12,6 +14,7 @@
     </style>
 </head>
 <body>
+    <div class="letterhead"><?= esc($organizationName) ?></div>
     <h1>PROMOTION BACKLOG REPORT</h1>
     <div class="subtitle">Overdue reservists by grade and educational track &mdash; generated <?= esc($generatedAt) ?></div>
 
@@ -53,5 +56,6 @@
             </tbody>
         </table>
     <?php endif; ?>
+    <div class="report-footer"><?= esc($reportFooterNote) ?></div>
 </body>
 </html>

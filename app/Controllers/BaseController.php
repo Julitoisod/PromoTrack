@@ -33,7 +33,7 @@ abstract class BaseController extends \CodeIgniter\Controller
      *
      * @var list<string>
      */
-    protected $helpers = ['form', 'url', 'auth', 'setting'];
+    protected $helpers = ['form', 'url', 'auth', 'setting', 'csv'];
 
     /**
      * @return void

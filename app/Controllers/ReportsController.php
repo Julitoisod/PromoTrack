@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\PromotionAssessmentModel;
 use App\Models\PromotionOrderModel;
 use App\Models\PromotionPackageModel;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -32,6 +33,37 @@ class ReportsController extends BaseController
         return $this->response
             ->setContentType('application/pdf')
             ->setBody($pdf);
+    }
+
+    /**
+     * The backlog as a spreadsheet rather than a PDF.
+     *
+     * Staff work the backlog list -- they sort it, annotate it, and hand parts
+     * of it to different desks -- which a PDF does not allow.
+     */
+    public function backlogCsv(): ResponseInterface
+    {
+        $user = $this->currentUser();
+
+        $unitScopedId = $user !== null && $user->inGroup('unit_s1_clerk')
+            ? (int) $user->organizational_unit_id
+            : null;
+
+        $overdue = (new PromotionAssessmentModel())->overdueReservists($unitScopedId);
+
+        // Columns named explicitly so an empty backlog still exports a usable
+        // header row rather than a blank file, and so the export does not
+        // silently change shape when the query gains a column.
+        $columns = [
+            'reservist_number', 'last_name', 'first_name', 'unit_name', 'rank_name',
+            'track_name', 'time_in_grade_months', 'as_of_date', 'promotion_status',
+            'requires_manual_review',
+        ];
+
+        return $this->response->download(
+            'promotion-backlog-' . date('Ymd') . '.csv',
+            csv_from_rows($overdue, $columns)
+        )->setContentType('text/csv');
     }
 
     public function promotionOrder(?int $promotionOrderId = null): ResponseInterface

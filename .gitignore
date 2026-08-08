@@ -63,6 +63,9 @@ Vagrantfile
 /writable/debugbar/*
 !/writable/debugbar/index.html
 
+# Database dumps written by App\Services\BackupService
+/writable/backups/
+
 php_errors.log
 
 #-------------------------

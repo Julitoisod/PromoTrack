@@ -41,4 +41,43 @@ class PackageStatusHistoryModel extends Model
             ->orderBy('id', 'ASC')
             ->findAll();
     }
+
+    /**
+     * Average number of days a package sits in each status before moving on.
+     *
+     * Every transition writes a row here, so the time spent in a status is the
+     * gap between the row that entered it and the next row for that package.
+     * Only completed stays are counted -- a package still sitting in a status
+     * has no exit row yet, and counting it as zero would flatter the average.
+     *
+     * @return array<string, float> status => average days, slowest first
+     */
+    public function averageDaysInStatus(?int $organizationalUnitId = null): array
+    {
+        $builder = $this->db->table('package_status_histories AS entered')
+            ->select('entered.to_status AS status, AVG(TIMESTAMPDIFF(HOUR, entered.created_at, exited.created_at) / 24) AS avg_days')
+            ->join(
+                'package_status_histories AS exited',
+                'exited.promotion_package_id = entered.promotion_package_id AND exited.id = ('
+                    . ' SELECT MIN(next.id) FROM package_status_histories AS next'
+                    . ' WHERE next.promotion_package_id = entered.promotion_package_id AND next.id > entered.id)',
+                'inner'
+            )
+            ->groupBy('entered.to_status');
+
+        if ($organizationalUnitId !== null) {
+            $builder->join('promotion_packages', 'promotion_packages.id = entered.promotion_package_id')
+                ->where('promotion_packages.organizational_unit_id', $organizationalUnitId);
+        }
+
+        $averages = [];
+
+        foreach ($builder->get()->getResultArray() as $row) {
+            $averages[(string) $row['status']] = round((float) $row['avg_days'], 1);
+        }
+
+        arsort($averages);
+
+        return $averages;
+    }
 }

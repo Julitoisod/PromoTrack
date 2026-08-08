@@ -28,14 +28,15 @@ class PromotionRuleModel extends Model
 
     protected $validationRules = [
         'from_rank_id' => 'required|is_natural_no_zero',
-        'to_rank_id'   => 'required|is_natural_no_zero|differs[from_rank_id]|rank_progression[from_rank_id]',
+        'to_rank_id'   => 'required|is_natural_no_zero|differs[from_rank_id]|rank_progression[from_rank_id]|unique_rank_transition[from_rank_id]',
         'rule_name'    => 'required|max_length[150]',
     ];
 
     protected $validationMessages = [
         'to_rank_id' => [
-            'differs'          => 'The target rank must be different from the current rank.',
-            'rank_progression' => 'The target rank must be a higher rank than the current rank.',
+            'differs'                => 'The target rank must be different from the current rank.',
+            'rank_progression'       => 'The target rank must be a higher rank than the current rank.',
+            'unique_rank_transition' => 'A promotion rule for this rank transition already exists.',
         ],
     ];
 

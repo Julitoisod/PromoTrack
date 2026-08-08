@@ -75,6 +75,18 @@ final class ReservistRecordsTest extends CIUnitTestCase
         $this->clerk = $this->createUnitS1Clerk($this->ownUnitId);
     }
 
+    /**
+     * Clears the session actingAs() created, so the next test class does not
+     * start out already logged in.
+     */
+    protected function tearDown(): void
+    {
+        auth()->logout();
+        session()->destroy();
+
+        parent::tearDown();
+    }
+
     private function insertRow(string $table, array $data): int
     {
         $this->db->table($table)->insert($data);

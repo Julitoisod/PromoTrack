@@ -78,25 +78,39 @@ $isActive      = static fn (string $path): string => $currentPath === $path ? 'a
                         <i class="bi bi-file-earmark-bar-graph me-2"></i> Promotion Backlog Report
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= esc(site_url('reports/backlog.csv')) ?>">
+                        <i class="bi bi-filetype-csv me-2"></i> Backlog Spreadsheet
+                    </a>
+                </li>
             <?php endif; ?>
 
             <?php if ($can('users.manage') || $can('rules.manage') || $can('units.manage') || $can('settings.manage') || $can('audit_logs.view')): ?>
                 <li class="nav-item mt-3">
                     <span class="text-uppercase text-muted small fw-semibold px-2">Administration</span>
                 </li>
-                <?php foreach ([
-                    ['perm' => 'users.manage', 'icon' => 'bi-person-gear', 'label' => 'Users'],
-                    ['perm' => 'rules.manage', 'icon' => 'bi-journal-check', 'label' => 'Promotion Rules'],
-                    ['perm' => 'units.manage', 'icon' => 'bi-diagram-2', 'label' => 'Organizational Units'],
-                    ['perm' => 'settings.manage', 'icon' => 'bi-gear', 'label' => 'Settings'],
-                    ['perm' => 'audit_logs.view', 'icon' => 'bi-shield-lock', 'label' => 'Audit Logs'],
+                <?php
+                // `path` null means the module is still unbuilt and renders as
+                // a disabled placeholder rather than a dead link.
+                foreach ([
+                    ['perm' => 'units.manage', 'icon' => 'bi-diagram-2', 'label' => 'Reference Data', 'path' => 'admin/reference'],
+                    ['perm' => 'rules.manage', 'icon' => 'bi-journal-check', 'label' => 'Promotion Rules', 'path' => 'admin/rules'],
+                    ['perm' => 'audit_logs.view', 'icon' => 'bi-shield-lock', 'label' => 'Audit Logs', 'path' => 'admin/audit-logs'],
+                    ['perm' => 'settings.manage', 'icon' => 'bi-gear', 'label' => 'Settings & Backups', 'path' => 'admin/settings'],
+                    ['perm' => 'users.manage', 'icon' => 'bi-person-gear', 'label' => 'Users', 'path' => null],
                 ] as $adminItem): ?>
                     <?php if ($can($adminItem['perm'])): ?>
                         <li class="nav-item">
-                            <span class="nav-link disabled d-flex justify-content-between align-items-center">
-                                <span><i class="bi <?= esc($adminItem['icon']) ?> me-2"></i> <?= esc($adminItem['label']) ?></span>
-                                <span class="badge text-bg-secondary">Soon</span>
-                            </span>
+                            <?php if ($adminItem['path'] === null): ?>
+                                <span class="nav-link disabled d-flex justify-content-between align-items-center">
+                                    <span><i class="bi <?= esc($adminItem['icon']) ?> me-2"></i> <?= esc($adminItem['label']) ?></span>
+                                    <span class="badge text-bg-secondary">Soon</span>
+                                </span>
+                            <?php else: ?>
+                                <a class="nav-link <?= $isActive($adminItem['path']) ?>" href="<?= esc(site_url($adminItem['path'])) ?>">
+                                    <i class="bi <?= esc($adminItem['icon']) ?> me-2"></i> <?= esc($adminItem['label']) ?>
+                                </a>
+                            <?php endif; ?>
                         </li>
                     <?php endif; ?>
                 <?php endforeach; ?>

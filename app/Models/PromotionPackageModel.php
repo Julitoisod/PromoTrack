@@ -64,6 +64,15 @@ class PromotionPackageModel extends Model
      */
     public function listForDisplay(?int $organizationalUnitId, ?array $statuses = null): array
     {
+        return $this->listQuery($organizationalUnitId, $statuses)->findAll();
+    }
+
+    /**
+     * Same selection as listForDisplay(), returned unexecuted so the caller
+     * can `paginate()` it rather than loading every package into the browser.
+     */
+    public function listQuery(?int $organizationalUnitId, ?array $statuses = null): self
+    {
         $builder = $this->select(
             'promotion_packages.*, reservists.first_name, reservists.last_name, reservists.reservist_number,'
             . ' organizational_units.unit_name'
@@ -79,7 +88,7 @@ class PromotionPackageModel extends Model
             $builder->whereIn('promotion_packages.status', $statuses);
         }
 
-        return $builder->orderBy('promotion_packages.updated_at', 'DESC')->findAll();
+        return $builder->orderBy('promotion_packages.updated_at', 'DESC');
     }
 
     /**

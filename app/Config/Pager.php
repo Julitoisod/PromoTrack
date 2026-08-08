@@ -21,7 +21,9 @@ class Pager extends BaseConfig
      * @var array<string, string>
      */
     public array $templates = [
-        'default_full'   => 'CodeIgniter\Pager\Views\default_full',
+        // Bootstrap 5 markup; the framework default renders as bare links.
+        // See app/Views/components/pager.php.
+        'default_full'   => 'components/pager',
         'default_simple' => 'CodeIgniter\Pager\Views\default_simple',
         'default_head'   => 'CodeIgniter\Pager\Views\default_head',
     ];

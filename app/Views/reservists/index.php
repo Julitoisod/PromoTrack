@@ -13,10 +13,31 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
+        <form method="get" action="<?= esc(site_url('reservists')) ?>" class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label" for="q">Search</label>
+                <input type="search" class="form-control form-control-sm" id="q" name="q"
+                       placeholder="Name, reservist number, or serial number"
+                       value="<?= esc($search) ?>">
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+            <?php if ($search !== ''): ?>
+                <div class="col-md-2 d-grid">
+                    <a class="btn btn-sm btn-outline-secondary" href="<?= esc(site_url('reservists')) ?>">Clear</a>
+                </div>
+            <?php endif; ?>
+        </form>
+
         <?php if (empty($reservists)): ?>
             <div class="empty-state">
                 <i class="bi bi-people"></i>
-                <p class="mb-0">No reservist profiles found yet.</p>
+                <p class="mb-0">
+                    <?= $search !== '' ? 'No reservist matches that search.' : 'No reservist profiles found yet.' ?>
+                </p>
             </div>
         <?php else: ?>
             <div class="table-responsive">
@@ -69,6 +90,8 @@
                     </tbody>
                 </table>
             </div>
+
+            <?= $pager->links() ?>
         <?php endif; ?>
     </div>
 </div>
@@ -76,9 +99,16 @@
 
 <?= $this->section('scripts') ?>
 <script {csp-script-nonce}>
+    // Sorting only -- paging and searching are done in SQL (see
+    // ReservistsController::index), so DataTables must not add its own.
     document.addEventListener('DOMContentLoaded', function () {
         if (window.jQuery && document.getElementById('reservistsTable')) {
-            jQuery('#reservistsTable').DataTable({ order: [] });
+            jQuery('#reservistsTable').DataTable({
+                order: [],
+                paging: false,
+                searching: false,
+                info: false,
+            });
         }
     });
 </script>

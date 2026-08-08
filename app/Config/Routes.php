@@ -93,8 +93,38 @@ $routes->group('api/notifications', ['filter' => 'session'], static function (Ro
     $routes->post('(:num)/read', 'Api\NotificationsController::markRead/$1');
 });
 
+$routes->group('admin', ['filter' => 'session'], static function (RouteCollection $routes): void {
+    // Reference data: units, ranks, training-types, education-tracks.
+    // See Admin\ReferenceDataController::SETS.
+    $routes->get('reference', 'Admin\ReferenceDataController::index', ['filter' => 'permission:units.manage']);
+    $routes->get('reference/(:segment)', 'Admin\ReferenceDataController::index/$1', ['filter' => 'permission:units.manage']);
+    $routes->post('reference/(:segment)', 'Admin\ReferenceDataController::store/$1', ['filter' => 'permission:units.manage']);
+    $routes->post('reference/(:segment)/(:num)', 'Admin\ReferenceDataController::update/$1/$2', ['filter' => 'permission:units.manage']);
+    $routes->post('reference/(:segment)/(:num)/toggle', 'Admin\ReferenceDataController::toggle/$1/$2', ['filter' => 'permission:units.manage']);
+
+    // Versioned promotion rules. A threshold change inserts a new version and
+    // expires the old one; see Admin\PromotionRulesController::storeVersion().
+    $routes->get('rules', 'Admin\PromotionRulesController::index', ['filter' => 'permission:rules.manage']);
+    $routes->post('rules', 'Admin\PromotionRulesController::store', ['filter' => 'permission:rules.manage']);
+    $routes->get('rules/(:num)', 'Admin\PromotionRulesController::show/$1', ['filter' => 'permission:rules.manage']);
+    $routes->post('rules/(:num)/versions', 'Admin\PromotionRulesController::storeVersion/$1', ['filter' => 'permission:rules.manage']);
+    $routes->post('rules/(:num)/toggle', 'Admin\PromotionRulesController::toggle/$1', ['filter' => 'permission:rules.manage']);
+
+    // Append-only audit trail.
+    $routes->get('audit-logs', 'Admin\AuditLogsController::index', ['filter' => 'permission:audit_logs.view']);
+    $routes->get('audit-logs/export', 'Admin\AuditLogsController::export', ['filter' => 'permission:audit_logs.view']);
+
+    // System settings and database backups.
+    $routes->get('settings', 'Admin\SettingsController::index', ['filter' => 'permission:settings.manage']);
+    $routes->post('settings', 'Admin\SettingsController::save', ['filter' => 'permission:settings.manage']);
+    $routes->post('backups', 'Admin\SettingsController::createBackup', ['filter' => 'permission:backups.manage']);
+    $routes->get('backups/(:segment)/download', 'Admin\SettingsController::downloadBackup/$1', ['filter' => 'permission:backups.manage']);
+    $routes->post('backups/(:segment)/delete', 'Admin\SettingsController::deleteBackup/$1', ['filter' => 'permission:backups.manage']);
+});
+
 $routes->group('reports', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('backlog', 'ReportsController::backlog', ['filter' => 'permission:reports.generate']);
+    $routes->get('backlog.csv', 'ReportsController::backlogCsv', ['filter' => 'permission:reports.generate']);
     $routes->get('promotion-orders/(:num)', 'ReportsController::promotionOrder/$1', ['filter' => 'permission:reports.generate']);
     $routes->get('packages/(:num)/endorsements', 'ReportsController::endorsements/$1', ['filter' => 'permission:reports.generate']);
 });

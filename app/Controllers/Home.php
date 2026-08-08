@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\PackageStatusHistoryModel;
 use App\Models\PromotionAssessmentModel;
 use App\Models\PromotionOrderModel;
 use App\Models\PromotionPackageModel;
@@ -25,6 +26,7 @@ class Home extends BaseController
         $assessmentModel = new PromotionAssessmentModel();
         $packageModel    = new PromotionPackageModel();
         $orderModel      = new PromotionOrderModel();
+        $historyModel    = new PackageStatusHistoryModel();
 
         $statusCounts  = $assessmentModel->latestStatusCounts($unitScopedId);
         $packageCounts = $packageModel->countsByStatus($unitScopedId);
@@ -40,6 +42,11 @@ class Home extends BaseController
             'pendingPackages'     => $pendingPackages,
             'promotionsIssued'    => $orderModel->countForUnit($unitScopedId),
             'packageCounts'       => $packageCounts,
+
+            // The two questions a commander actually asks of this screen:
+            // are promotions moving, and where do packages get stuck.
+            'promotionsByMonth'   => $orderModel->monthlyTotals($unitScopedId),
+            'averageDaysInStatus' => $historyModel->averageDaysInStatus($unitScopedId),
         ]);
     }
 }
