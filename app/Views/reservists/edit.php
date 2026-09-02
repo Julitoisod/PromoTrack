@@ -1,9 +1,11 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
-<h1 class="h3 mb-4">Edit Reservist</h1>
+<div class="page-head">
+    <h1 class="page-title">Edit Reservist</h1>
+</div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <form action="<?= esc(site_url('reservists/' . $reservist->id)) ?>" method="post">
             <?= csrf_field() ?>

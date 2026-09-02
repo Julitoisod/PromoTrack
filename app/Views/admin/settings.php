@@ -14,11 +14,11 @@ $formatSize = static function (int $bytes): string {
 };
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">System Settings</h1>
+<div class="page-head">
+    <h1 class="page-title">System Settings</h1>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header">Application</div>
     <div class="card-body">
         <form method="post" action="<?= esc(site_url('admin/settings')) ?>" class="row g-3">
@@ -42,7 +42,7 @@ $formatSize = static function (int $bytes): string {
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Database Backups</span>
         <?php if ($canBackup): ?>
@@ -72,10 +72,10 @@ $formatSize = static function (int $bytes): string {
                 <table class="table table-sm align-middle">
                     <thead>
                         <tr>
-                            <th>File</th>
-                            <th>Taken</th>
-                            <th>Size</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="col">File</th>
+                            <th scope="col">Taken</th>
+                            <th scope="col">Size</th>
+                            <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

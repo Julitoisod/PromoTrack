@@ -2,8 +2,8 @@
 
 <?= $this->section('content') ?>
 <?php $showUser = auth()->user(); ?>
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><?= esc($reservist->getFullName()) ?></h1>
+<div class="page-head">
+    <h1 class="page-title"><?= esc($reservist->getFullName()) ?></h1>
     <div class="d-flex gap-2">
         <?php if ($showUser !== null && $showUser->can('reservists.update')): ?>
             <a href="<?= esc(site_url('reservists/' . $reservist->id . '/edit')) ?>" class="btn btn-outline-primary">
@@ -26,7 +26,7 @@ $statusBadge = match ($reservist->status) {
 
 <div class="row g-3">
     <div class="col-md-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Personal Information</div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -59,7 +59,7 @@ $statusBadge = match ($reservist->status) {
     </div>
 
     <div class="col-md-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Service Information</div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -100,7 +100,7 @@ $statusBadge = match ($reservist->status) {
     ]) ?>
 
     <div class="col-12">
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Promotion Eligibility</span>
                 <div class="d-flex gap-2">
@@ -124,18 +124,18 @@ $statusBadge = match ($reservist->status) {
             </div>
             <div class="card-body">
                 <?php if (empty($assessments)): ?>
-                    <p class="text-muted mb-0">No eligibility assessment has been run for this reservist yet.</p>
+                    <div class="empty-state"><i class="bi bi-clipboard-check"></i><p class="mb-0">No eligibility assessment has been run for this reservist yet.</p></div>
                 <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>As of</th>
-                                    <th>Time in Grade</th>
-                                    <th>Status</th>
-                                    <th>Manual Review?</th>
-                                    <th>Verified</th>
-                                    <th></th>
+                                    <th scope="col">As of</th>
+                                    <th scope="col">Time in Grade</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Manual Review?</th>
+                                    <th scope="col">Verified</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>

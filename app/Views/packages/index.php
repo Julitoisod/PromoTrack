@@ -1,28 +1,43 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Promotion Packages</h1>
+<div class="page-head">
+    <h1 class="page-title">Promotion Packages</h1>
+    <?php // Four sidebar links deep-link here with a ?status filter. Without this chip the
+          // page just shows an unexplained short list under the generic title. ?>
+    <?php if ($currentStatus !== null): ?>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small">Filtered by</span>
+            <span class="badge text-bg-secondary"><?= esc(ucwords(str_replace('_', ' ', $currentStatus))) ?></span>
+            <a class="btn btn-sm btn-outline-secondary" href="<?= esc(site_url('packages')) ?>">
+                <i class="bi bi-x-lg me-1"></i> Clear filter
+            </a>
+        </div>
+    <?php endif; ?>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <?php if (empty($packages)): ?>
             <div class="empty-state">
                 <i class="bi bi-folder2-open"></i>
-                <p class="mb-0">No promotion packages found yet.</p>
+                <p class="mb-0">
+                    <?= $currentStatus !== null
+                        ? 'No packages are at this stage right now.'
+                        : 'No promotion packages found yet.' ?>
+                </p>
             </div>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle" id="packagesTable">
                     <thead>
                         <tr>
-                            <th>Package #</th>
-                            <th>Reservist</th>
-                            <th>Unit</th>
-                            <th>Status</th>
-                            <th>Completeness</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="col">Package #</th>
+                            <th scope="col">Reservist</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Completeness</th>
+                            <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

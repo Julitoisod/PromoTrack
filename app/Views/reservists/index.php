@@ -1,8 +1,8 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Reservists</h1>
+<div class="page-head">
+    <h1 class="page-title">Reservists</h1>
     <?php $listUser = auth()->user(); ?>
     <?php if ($listUser !== null && $listUser->can('reservists.create')): ?>
         <a href="<?= esc(site_url('reservists/create')) ?>" class="btn btn-primary">
@@ -11,7 +11,7 @@
     <?php endif; ?>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <form method="get" action="<?= esc(site_url('reservists')) ?>" class="row g-2 align-items-end mb-3">
             <div class="col-md-4">
@@ -44,12 +44,12 @@
                 <table class="table table-hover align-middle" id="reservistsTable">
                     <thead>
                         <tr>
-                            <th>Reservist #</th>
-                            <th>Name</th>
-                            <th>Rank</th>
-                            <th>Unit</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="col">Reservist #</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Rank</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col">Status</th>
+                            <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

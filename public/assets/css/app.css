@@ -8,6 +8,12 @@
 :root {
     --pt-sidebar-width: 260px;
     --pt-navbar-height: 60px;
+
+    /* Bootstrap ships --bs-primary as #0d6efd, which renders beside the brand blue on
+       every btn-outline-primary, text-primary and active nav-pill. Remap it once here
+       rather than overriding each component. .btn-primary keeps its own navy below. */
+    --bs-primary: var(--pt-blue);
+    --bs-primary-rgb: 22, 104, 220;
 }
 
 body {
@@ -256,6 +262,19 @@ body.sidebar-collapsed {
     border-bottom: 0;
 }
 
+.table > tbody > tr:hover > * {
+    --bs-table-bg-state: var(--pt-field);
+}
+
+/* Audit rows print raw JSON; without this one long blob scrolls the whole table. */
+.table pre {
+    margin: 0;
+    max-height: 14rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .btn {
     border-radius: 0.5rem;
 }
@@ -271,10 +290,25 @@ body.sidebar-collapsed {
     border-color: #0d2f66;
 }
 
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+}
+
 .page-title {
     font-size: 1.6rem;
     font-weight: 700;
-    margin-bottom: 1.25rem;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 0.85rem;
+    color: var(--pt-muted);
+    margin: 0.15rem 0 0;
 }
 
 .empty-state {

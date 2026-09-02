@@ -15,10 +15,10 @@ foreach ($educationTracks as $track) {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-head">
     <div>
-        <h1 class="h3 mb-1"><?= esc($rule['rule_name']) ?></h1>
-        <p class="text-muted mb-0">
+        <h1 class="page-title"><?= esc($rule['rule_name']) ?></h1>
+        <p class="page-subtitle">
             <?= esc($rankNames[(int) $rule['from_rank_id']] ?? '—') ?>
             →
             <?= esc($rankNames[(int) $rule['to_rank_id']] ?? '—') ?>
@@ -27,8 +27,8 @@ foreach ($educationTracks as $track) {
     <a href="<?= esc(site_url('admin/rules')) ?>" class="btn btn-outline-secondary">Back to rules</a>
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header">New version</div>
+<div class="card mb-4">
+    <div class="card-header">New Version</div>
     <div class="card-body">
         <p class="text-muted small">
             Saving here expires the version currently in force the day before this one takes effect.
@@ -105,8 +105,8 @@ foreach ($educationTracks as $track) {
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header">Version history</div>
+<div class="card">
+    <div class="card-header">Version History</div>
     <div class="card-body">
         <?php if ($versions === []): ?>
             <div class="empty-state">
@@ -118,14 +118,14 @@ foreach ($educationTracks as $track) {
                 <table class="table table-sm align-middle">
                     <thead>
                         <tr>
-                            <th>Version</th>
-                            <th>Track</th>
-                            <th>Min. TIG</th>
-                            <th>MLES</th>
-                            <th>PFT</th>
-                            <th>Effective</th>
-                            <th>Expires</th>
-                            <th>Notes</th>
+                            <th scope="col">Version</th>
+                            <th scope="col">Track</th>
+                            <th scope="col">Min. TIG</th>
+                            <th scope="col">MLES</th>
+                            <th scope="col">PFT</th>
+                            <th scope="col">Effective</th>
+                            <th scope="col">Expires</th>
+                            <th scope="col">Notes</th>
                         </tr>
                     </thead>
                     <tbody>

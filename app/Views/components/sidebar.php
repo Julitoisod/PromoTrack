@@ -115,7 +115,7 @@ $isCurrent = static function (array $item) use ($currentPath, $currentUri): bool
                                 <?php else: ?>
                                     <a class="nav-link <?= $isCurrent($item) ? 'active' : '' ?>"
                                        href="<?= esc(site_url($item['path'])) ?>" title="<?= esc($item['label']) ?>"
-                                       <?= ($item['blank'] ?? false) ? 'target="_blank"' : '' ?>>
+                                       <?= ($item['blank'] ?? false) ? 'target="_blank" rel="noopener"' : '' ?>>
                                         <i class="bi <?= esc($item['icon']) ?>"></i>
                                         <span class="nav-text"><?= esc($item['label']) ?></span>
                                     </a>

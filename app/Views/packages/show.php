@@ -13,21 +13,21 @@ $statusBadge = match ($status) {
 };
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-head">
     <div>
-        <h1 class="h3 mb-0"><?= esc($package['package_number']) ?></h1>
+        <h1 class="page-title"><?= esc($package['package_number']) ?></h1>
         <span class="badge text-bg-<?= esc($statusBadge) ?> mt-1"><?= esc(ucwords(str_replace('_', ' ', $status))) ?></span>
         <span class="text-muted ms-2"><?= esc((string) $package['completeness_percentage']) ?>% complete</span>
     </div>
     <div class="d-flex gap-2">
         <?php if ($showUser !== null && $showUser->can('reports.generate')): ?>
             <?php if (in_array($status, ['rcdg_endorsed', 'forwarded_to_external_authority', 'awaiting_external_decision', 'deferred', 'approved', 'disapproved', 'promotion_order_recorded', 'closed'], true)): ?>
-                <a href="<?= esc(site_url('reports/packages/' . $package['id'] . '/endorsements')) ?>" class="btn btn-outline-secondary" target="_blank">
+                <a href="<?= esc(site_url('reports/packages/' . $package['id'] . '/endorsements')) ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Endorsement Report
                 </a>
             <?php endif; ?>
             <?php if ($promotionOrder !== null): ?>
-                <a href="<?= esc(site_url('reports/promotion-orders/' . $promotionOrder['id'])) ?>" class="btn btn-outline-secondary" target="_blank">
+                <a href="<?= esc(site_url('reports/promotion-orders/' . $promotionOrder['id'])) ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Promotion Order
                 </a>
             <?php endif; ?>
@@ -38,7 +38,7 @@ $statusBadge = match ($status) {
 
 <div class="row g-3 mb-3">
     <div class="col-md-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Package Information</div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -52,17 +52,17 @@ $statusBadge = match ($status) {
     </div>
 </div>
 
-<div class="card shadow-sm mb-3">
+<div class="card mb-3">
     <div class="card-header">Document Checklist</div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Document</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">Item</th>
+                        <th scope="col">Document</th>
+                        <th scope="col">Status</th>
+                        <th class="text-end" scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,7 +145,7 @@ $statusBadge = match ($status) {
     </div>
 </div>
 
-<div class="card shadow-sm mb-3">
+<div class="card mb-3">
     <div class="card-header">Workflow Actions</div>
     <div class="card-body d-flex flex-column gap-3">
         <?php if ($showUser !== null): ?>
@@ -271,11 +271,11 @@ $statusBadge = match ($status) {
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-header">Status History</div>
     <div class="card-body">
         <?php if (empty($history)): ?>
-            <p class="text-muted mb-0">No status changes recorded yet.</p>
+            <div class="empty-state"><i class="bi bi-clock-history"></i><p class="mb-0">No status changes recorded yet.</p></div>
         <?php else: ?>
             <ul class="list-group list-group-flush">
                 <?php foreach ($history as $entry): ?>

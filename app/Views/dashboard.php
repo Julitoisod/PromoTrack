@@ -2,7 +2,9 @@
 
 <?= $this->section('content') ?>
 <?php $dashUser = auth()->user(); ?>
-<h1 class="page-title">Welcome, <?= esc($dashUser->username ?? $dashUser->email ?? 'User') ?></h1>
+<div class="page-head">
+    <h1 class="page-title">Welcome, <?= esc($dashUser->username ?? $dashUser->email ?? 'User') ?></h1>
+</div>
 
 <div class="row g-3 mb-3">
     <?php // One tile per headline figure; the four differ only by label, value and accent.
@@ -34,7 +36,7 @@
             <div class="card-header">Promotion Package Pipeline</div>
             <div class="card-body">
                 <?php if (empty($packageCounts)): ?>
-                    <p class="text-muted mb-0">No promotion packages have been created yet.</p>
+                    <div class="empty-state"><i class="bi bi-folder2-open"></i><p class="mb-0">No promotion packages have been created yet.</p></div>
                 <?php else: ?>
                     <canvas id="packagePipelineChart" height="220"></canvas>
                 <?php endif; ?>
@@ -46,7 +48,7 @@
             <div class="card-header">Promotions Issued (last 12 months)</div>
             <div class="card-body">
                 <?php if (array_sum($promotionsByMonth) === 0): ?>
-                    <p class="text-muted mb-0">No promotion orders have been recorded yet.</p>
+                    <div class="empty-state"><i class="bi bi-award"></i><p class="mb-0">No promotion orders have been recorded yet.</p></div>
                 <?php else: ?>
                     <canvas id="promotionsTrendChart" height="220"></canvas>
                 <?php endif; ?>
@@ -59,7 +61,7 @@
             <div class="card-header">Average Days in Stage</div>
             <div class="card-body">
                 <?php if ($averageDaysInStatus === []): ?>
-                    <p class="text-muted mb-0">No package has completed a workflow stage yet.</p>
+                    <div class="empty-state"><i class="bi bi-hourglass-split"></i><p class="mb-0">No package has completed a workflow stage yet.</p></div>
                 <?php else: ?>
                     <canvas id="stageDurationChart" height="220"></canvas>
                     <p class="text-muted small mb-0 mt-2">
@@ -99,6 +101,12 @@
 
 <?= $this->section('scripts') ?>
 <script {csp-script-nonce}>
+    // Chart colours come from the palette in theme.css rather than being hard-coded,
+    // so the charts cannot drift away from the rest of the brand.
+    var palette = getComputedStyle(document.documentElement);
+    var brandBlue = palette.getPropertyValue('--pt-blue').trim() || '#1668dc';
+    var brandNavy = palette.getPropertyValue('--pt-navy').trim() || '#123a7a';
+
     document.addEventListener('DOMContentLoaded', function () {
         var canvas = document.getElementById('packagePipelineChart');
 
@@ -116,7 +124,7 @@
                 datasets: [{
                     label: 'Packages',
                     data: data,
-                    backgroundColor: '#0d6efd',
+                    backgroundColor: brandBlue,
                 }],
             },
             options: {
@@ -138,8 +146,8 @@
                     datasets: [{
                         label: 'Promotions issued',
                         data: <?= json_encode(array_values($promotionsByMonth)) ?>,
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.12)',
+                        borderColor: brandBlue,
+                        backgroundColor: 'rgba(22, 104, 220, 0.12)',
                         fill: true,
                         tension: 0.25,
                         pointRadius: 3,
@@ -166,7 +174,7 @@
                     datasets: [{
                         label: 'Average days',
                         data: <?= json_encode(array_values($averageDaysInStatus)) ?>,
-                        backgroundColor: '#fd7e14',
+                        backgroundColor: brandNavy,
                     }],
                 },
                 options: {

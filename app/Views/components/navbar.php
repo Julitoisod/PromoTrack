@@ -5,8 +5,9 @@
  */
 $navUser = auth()->user();
 ?>
-<nav class="navbar navbar-expand-lg navbar-dark pt-navbar px-3 fixed-top">
-    <button class="btn me-2" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+<nav class="navbar navbar-expand-lg navbar-dark pt-navbar px-3 fixed-top" aria-label="Top bar">
+    <button class="btn me-2" type="button" id="sidebarToggle" aria-label="Toggle sidebar"
+            aria-controls="appSidebar" aria-expanded="true">
         <i class="bi bi-list"></i>
     </button>
 

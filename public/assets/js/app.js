@@ -31,9 +31,22 @@
             },
         };
 
+        // aria-expanded describes whether the sidebar's labels are showing, so it has to
+        // track the rail state rather than being a static attribute in the markup.
+        var syncToggleState = function () {
+            if (toggleButton) {
+                toggleButton.setAttribute(
+                    'aria-expanded',
+                    document.body.classList.contains('sidebar-collapsed') ? 'false' : 'true'
+                );
+            }
+        };
+
         if (railStore.read()) {
             document.body.classList.add('sidebar-collapsed');
         }
+
+        syncToggleState();
 
         if (toggleButton && sidebar) {
             toggleButton.addEventListener('click', function () {
@@ -41,6 +54,7 @@
                 if (window.innerWidth >= DESKTOP_MIN_WIDTH) {
                     var collapsed = document.body.classList.toggle('sidebar-collapsed');
                     railStore.write(collapsed);
+                    syncToggleState();
                     return;
                 }
 

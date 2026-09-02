@@ -11,17 +11,17 @@
 $exportQuery = http_build_query(array_filter($filters, static fn ($value): bool => $value !== ''));
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-head">
     <div>
-        <h1 class="h3 mb-1">Audit Logs</h1>
-        <p class="text-muted mb-0">Append-only record of who changed what, and when.</p>
+        <h1 class="page-title">Audit Logs</h1>
+        <p class="page-subtitle">Append-only record of who changed what, and when.</p>
     </div>
     <a class="btn btn-outline-primary" href="<?= esc(site_url('admin/audit-logs/export') . ($exportQuery !== '' ? '?' . $exportQuery : '')) ?>">
         <i class="bi bi-filetype-csv me-1"></i> Export CSV
     </a>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-body">
         <form method="get" action="<?= esc(site_url('admin/audit-logs')) ?>" class="row g-2 align-items-end">
             <div class="col-md-2">
@@ -70,7 +70,7 @@ $exportQuery = http_build_query(array_filter($filters, static fn ($value): bool 
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <?php if ($rows === []): ?>
             <div class="empty-state">
@@ -82,12 +82,12 @@ $exportQuery = http_build_query(array_filter($filters, static fn ($value): bool 
                 <table class="table table-sm align-middle">
                     <thead>
                         <tr>
-                            <th>When</th>
-                            <th>User</th>
-                            <th>Action</th>
-                            <th>Entity</th>
-                            <th>IP</th>
-                            <th>Change</th>
+                            <th scope="col">When</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Action</th>
+                            <th scope="col">Entity</th>
+                            <th scope="col">IP</th>
+                            <th scope="col">Change</th>
                         </tr>
                     </thead>
                     <tbody>

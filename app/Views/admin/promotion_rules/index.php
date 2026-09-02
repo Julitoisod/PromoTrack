@@ -1,8 +1,8 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Promotion Rules</h1>
+<div class="page-head">
+    <h1 class="page-title">Promotion Rules</h1>
 </div>
 
 <div class="alert alert-warning">
@@ -12,8 +12,8 @@
     on record so past assessments remain explainable.
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header">Add rank-transition rule</div>
+<div class="card mb-4">
+    <div class="card-header">Add Rank-Transition Rule</div>
     <div class="card-body">
         <form method="post" action="<?= esc(site_url('admin/rules')) ?>" class="row g-2 align-items-end">
             <?= csrf_field() ?>
@@ -52,8 +52,8 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header">Configured rules</div>
+<div class="card">
+    <div class="card-header">Configured Rules</div>
     <div class="card-body">
         <?php if ($rules === []): ?>
             <div class="empty-state">
@@ -65,14 +65,14 @@
                 <table class="table table-sm align-middle" id="rulesTable">
                     <thead>
                         <tr>
-                            <th>Rule</th>
-                            <th>Transition</th>
-                            <th>In force</th>
-                            <th>Min. time in grade</th>
-                            <th>MLES</th>
-                            <th>PFT</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="col">Rule</th>
+                            <th scope="col">Transition</th>
+                            <th scope="col">In force</th>
+                            <th scope="col">Min. time in grade</th>
+                            <th scope="col">MLES</th>
+                            <th scope="col">PFT</th>
+                            <th scope="col">Status</th>
+                            <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

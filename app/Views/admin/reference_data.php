@@ -13,8 +13,8 @@
 $base = site_url('admin/reference/' . $set);
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><?= esc($config['title']) ?></h1>
+<div class="page-head">
+    <h1 class="page-title"><?= esc($config['title']) ?></h1>
 </div>
 
 <ul class="nav nav-pills mb-3">
@@ -27,8 +27,8 @@ $base = site_url('admin/reference/' . $set);
     <?php endforeach; ?>
 </ul>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header">Add <?= esc(strtolower($config['singular'])) ?></div>
+<div class="card mb-4">
+    <div class="card-header">Add <?= esc($config['singular']) ?></div>
     <div class="card-body">
         <form method="post" action="<?= esc($base) ?>" class="row g-2 align-items-end">
             <?= csrf_field() ?>
@@ -64,8 +64,8 @@ $base = site_url('admin/reference/' . $set);
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header"><?= esc($config['title']) ?> on file</div>
+<div class="card">
+    <div class="card-header"><?= esc($config['title']) ?> On File</div>
     <div class="card-body">
         <?php if ($rows === []): ?>
             <div class="empty-state">
@@ -78,10 +78,10 @@ $base = site_url('admin/reference/' . $set);
                     <thead>
                         <tr>
                             <?php foreach ($config['columns'] as $meta): ?>
-                                <th><?= esc($meta['label']) ?></th>
+                                <th scope="col"><?= esc($meta['label']) ?></th>
                             <?php endforeach; ?>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="col">Status</th>
+                            <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

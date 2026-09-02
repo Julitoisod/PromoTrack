@@ -27,7 +27,7 @@ $deleteButton = static function (string $type, int $recordId) use ($recordsBase,
 ?>
 
 <div class="col-12">
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-header">Service Records</div>
         <div class="card-body">
             <p class="text-muted small">
@@ -67,17 +67,17 @@ $deleteButton = static function (string $type, int $recordId) use ($recordsBase,
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Title</th>
-                                    <th>Completed</th>
-                                    <th>Issuing Authority</th>
-                                    <th>Certificate No.</th>
-                                    <th class="text-end"></th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Title</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Issuing Authority</th>
+                                    <th scope="col">Certificate No.</th>
+                                    <th class="text-end" scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if ($trainings === []): ?>
-                                    <tr><td colspan="6" class="text-muted">No training is on file.</td></tr>
+                                    <tr><td colspan="6"><div class="empty-state"><i class="bi bi-mortarboard"></i><p class="mb-0">No training is on file.</p></div></td></tr>
                                 <?php else: ?>
                                     <?php foreach ($trainings as $row): ?>
                                         <?php
@@ -149,16 +149,16 @@ $deleteButton = static function (string $type, int $recordId) use ($recordsBase,
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Test date</th>
-                                    <th>Result</th>
-                                    <th>Score</th>
-                                    <th>Remarks</th>
-                                    <th class="text-end"></th>
+                                    <th scope="col">Test date</th>
+                                    <th scope="col">Result</th>
+                                    <th scope="col">Score</th>
+                                    <th scope="col">Remarks</th>
+                                    <th class="text-end" scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if ($fitnessTests === []): ?>
-                                    <tr><td colspan="5" class="text-muted">No physical fitness test is on file.</td></tr>
+                                    <tr><td colspan="5"><div class="empty-state"><i class="bi bi-activity"></i><p class="mb-0">No physical fitness test is on file.</p></div></td></tr>
                                 <?php else: ?>
                                     <?php foreach ($fitnessTests as $row): ?>
                                         <tr>
@@ -215,16 +215,16 @@ $deleteButton = static function (string $type, int $recordId) use ($recordsBase,
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Eligibility</th>
-                                    <th>Rating</th>
-                                    <th>Obtained</th>
-                                    <th>Issuing authority</th>
-                                    <th class="text-end"></th>
+                                    <th scope="col">Eligibility</th>
+                                    <th scope="col">Rating</th>
+                                    <th scope="col">Obtained</th>
+                                    <th scope="col">Issuing authority</th>
+                                    <th class="text-end" scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if ($eligibilities === []): ?>
-                                    <tr><td colspan="5" class="text-muted">No professional eligibility is on file.</td></tr>
+                                    <tr><td colspan="5"><div class="empty-state"><i class="bi bi-patch-check"></i><p class="mb-0">No professional eligibility is on file.</p></div></td></tr>
                                 <?php else: ?>
                                     <?php foreach ($eligibilities as $row): ?>
                                         <tr>
@@ -274,16 +274,16 @@ $deleteButton = static function (string $type, int $recordId) use ($recordsBase,
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Rank</th>
-                                    <th>Effective date</th>
-                                    <th>Order reference</th>
-                                    <th>Remarks</th>
-                                    <th class="text-end"></th>
+                                    <th scope="col">Rank</th>
+                                    <th scope="col">Effective date</th>
+                                    <th scope="col">Order reference</th>
+                                    <th scope="col">Remarks</th>
+                                    <th class="text-end" scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if ($rankHistory === []): ?>
-                                    <tr><td colspan="5" class="text-muted">No rank history is on file.</td></tr>
+                                    <tr><td colspan="5"><div class="empty-state"><i class="bi bi-chevron-double-up"></i><p class="mb-0">No rank history is on file.</p></div></td></tr>
                                 <?php else: ?>
                                     <?php foreach ($rankHistory as $row): ?>
                                         <?php
