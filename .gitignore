@@ -66,6 +66,10 @@ Vagrantfile
 # Database dumps written by App\Services\BackupService
 /writable/backups/
 
+# Marker for the SessionEnd auto-push hook. A per-machine preference, not a
+# property of the project.
+/.claude-autopush
+
 # `php spark serve` runs with public/ as the working directory, so the relative
 # session.savePath in .env resolves to public/writable/session rather than the
 # real writable/ dir. The files are throwaway either way.
