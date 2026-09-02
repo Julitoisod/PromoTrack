@@ -20,16 +20,21 @@
          element at runtime and style-src can stay at 'self'. -->
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/sweetalert2/sweetalert2.min.css')) ?>">
     <!-- Application styles -->
+    <link rel="stylesheet" href="<?= esc(base_url('assets/css/theme.css')) ?>">
     <link rel="stylesheet" href="<?= esc(base_url('assets/css/app.css')) ?>">
 
     <?= $this->renderSection('styles') ?>
 </head>
 <body>
+    <div class="page-loader" role="status" aria-live="polite">
+        <div class="loader"></div>
+        <p>please wait</p>
+    </div>
+
     <?= view('components/navbar') ?>
     <?= view('components/sidebar') ?>
 
     <main class="main-content">
-        <?= view('components/breadcrumbs', ['breadcrumbs' => $breadcrumbs ?? []]) ?>
         <?= view('components/alerts') ?>
 
         <?= $this->renderSection('content') ?>

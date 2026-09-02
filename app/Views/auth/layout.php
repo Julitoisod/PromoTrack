@@ -8,17 +8,20 @@
 
     <?php // Overrides \CodeIgniter\Shield\Views\layout, which loads Bootstrap from a CDN.
           // Config/ContentSecurityPolicy restricts styles to 'self', so the CDN copy is
-          // refused by the browser and the auth pages render unstyled. ?>
+          // refused by the browser and the auth pages render unstyled.
+          // auth.css replaces app.css here: the auth screens use none of the dashboard's
+          // sidebar rules, and app.css offsets the body by the navbar height. ?>
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(base_url('assets/css/theme.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(base_url('assets/css/auth.css')) ?>">
 
     <?= $this->renderSection('pageStyles') ?>
 </head>
 
-<body class="bg-light">
+<body class="auth-page">
 
-    <main role="main" class="container">
+    <main role="main">
         <?= $this->renderSection('main') ?>
     </main>
 

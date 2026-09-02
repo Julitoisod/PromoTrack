@@ -1,30 +1,191 @@
-/* PromoTrack AFP-RF application layout styles */
+/* PromoTrack AFP-RF application shell.
+   Brand colours come from theme.css, which layouts/main.php loads first.
+
+   Rules live here rather than in style attributes because
+   Content-Security-Policy keeps style-src-attr at 'self', and an inline style
+   attribute cannot carry a nonce. */
 
 :root {
     --pt-sidebar-width: 260px;
-    --pt-navbar-height: 56px;
+    --pt-navbar-height: 60px;
 }
 
 body {
     padding-top: var(--pt-navbar-height);
-    background-color: #f4f6f9;
+    background-color: var(--pt-canvas);
+    color: var(--pt-ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
+/* ---------- Top bar ---------- */
+
+.navbar.pt-navbar {
+    height: var(--pt-navbar-height);
+    background: linear-gradient(90deg, var(--pt-navy) 0%, var(--pt-blue-deep) 100%);
+    box-shadow: 0 0.125rem 0.75rem rgba(11, 63, 150, 0.25);
+}
+
+.pt-navbar .navbar-brand {
+    letter-spacing: 0.01em;
+}
+
+.pt-navbar .btn {
+    border: 0;
+    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+}
+
+.pt-navbar .btn:hover,
+.pt-navbar .btn:focus,
+.pt-navbar .btn.show {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---------- Sidebar ---------- */
+
+/* A floating rounded panel rather than a flush full-height column, so the
+   canvas colour reads as a margin around it. */
 .sidebar {
     position: fixed;
     top: var(--pt-navbar-height);
     left: 0;
     bottom: 0;
     width: var(--pt-sidebar-width);
+    padding: 0.9rem;
     overflow-y: auto;
+    overflow-x: hidden;
     z-index: 1020;
+    transition: transform 0.2s ease-in-out, width 0.2s ease-in-out;
+}
+
+.sidebar-inner {
+    background: #fff;
+    border: 1px solid var(--pt-line);
+    border-radius: var(--pt-radius);
+    box-shadow: var(--pt-shadow);
+    padding: 0.6rem;
+}
+
+.sidebar .nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0.55rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    color: #465061;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    width: 1.25rem;
+    text-align: center;
+}
+
+.sidebar .nav-link:hover {
+    background: var(--pt-field);
+    color: var(--pt-navy);
+}
+
+/* Current page: tinted row, brand-blue label, accent bar on the leading edge. */
+.sidebar .nav-link.active {
+    background: rgba(22, 104, 220, 0.09);
+    color: var(--pt-blue);
+    font-weight: 600;
+}
+
+.sidebar .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--pt-blue);
+}
+
+.sidebar .nav-link.disabled {
+    color: #adb5bd !important;
+    cursor: default;
+}
+
+/* Collapsible section heading. */
+.nav-group-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    border: 0;
+    background: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    line-height: 1.3;
+    text-align: left;
+    text-transform: uppercase;
+    color: var(--pt-muted);
+    gap: 0.5rem;
+}
+
+.nav-group-toggle:hover {
+    color: var(--pt-navy);
+}
+
+.nav-chevron {
+    font-size: 0.7rem;
     transition: transform 0.2s ease-in-out;
+    transform: rotate(90deg);
+}
+
+.nav-group-toggle.collapsed .nav-chevron {
+    transform: rotate(0deg);
+}
+
+/* ---------- Collapsed icon rail ---------- */
+
+body.sidebar-collapsed {
+    --pt-sidebar-width: 5rem;
+}
+
+.sidebar-collapsed .sidebar .nav-text,
+.sidebar-collapsed .sidebar .badge,
+.sidebar-collapsed .nav-group-toggle {
+    display: none;
+}
+
+/* With the headings gone, a rule keeps the groups readable as groups. */
+.sidebar-collapsed .nav-group > .collapse {
+    border-top: 1px solid var(--pt-line);
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.sidebar-collapsed .sidebar .nav-link {
+    justify-content: center;
+    padding: 0.65rem 0;
+}
+
+/* Every group stays visible as icons while the rail is collapsed, whatever
+   its expanded/collapsed state was. */
+.sidebar-collapsed .sidebar .collapse,
+.sidebar-collapsed .sidebar .collapsing {
+    display: block !important;
+    height: auto !important;
+    transition: none;
 }
 
 .main-content {
     margin-left: var(--pt-sidebar-width);
-    padding: 1.5rem;
+    padding: 1.75rem;
     min-height: calc(100vh - var(--pt-navbar-height));
+    transition: margin-left 0.2s ease-in-out;
 }
 
 @media (max-width: 991.98px) {
@@ -38,22 +199,88 @@ body {
 
     .main-content {
         margin-left: 0;
+        padding: 1.25rem;
     }
 }
 
-.nav-pills .nav-link.active {
-    background-color: #0d6efd;
+/* ---------- Cards, tables, buttons ---------- */
+
+.card {
+    border: 1px solid var(--pt-line);
+    border-radius: var(--pt-radius);
+    box-shadow: var(--pt-shadow);
 }
 
-.nav-link.disabled {
-    color: #adb5bd !important;
-    cursor: default;
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--pt-line);
+    padding: 0.9rem 1.15rem;
+    font-weight: 600;
+    color: var(--pt-ink);
+}
+
+/* Dashboard figure tile: a coloured icon chip beside a large number. */
+.stat-card .stat-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.stat-card .stat-label {
+    font-size: 0.8rem;
+    color: var(--pt-muted);
+}
+
+.stat-icon {
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.35rem;
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.75rem 0.9rem;
+}
+
+.table > thead th {
+    background: var(--pt-field);
+    color: var(--pt-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 0;
+}
+
+.btn {
+    border-radius: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--pt-navy);
+    border-color: var(--pt-navy);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #0d2f66;
+    border-color: #0d2f66;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
 }
 
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
-    color: #6c757d;
+    color: var(--pt-muted);
 }
 
 .empty-state i {
@@ -62,10 +289,52 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Moved out of inline style attributes so Content-Security-Policy can keep
-   style-src-attr at 'self' (inline style attributes cannot carry a nonce). */
 .notifications-menu {
     min-width: 320px;
     max-height: 400px;
     overflow-y: auto;
+}
+
+/* ---------- Page loader ---------- */
+
+/* Pure CSS: the overlay hides itself 3s after the page paints. No JS, so a
+   script error or a blocked script can never leave the app behind a curtain. */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    background: var(--pt-canvas);
+    animation: pt-loader-out 0.35s ease-in 3s forwards;
+}
+
+.page-loader p {
+    margin: 0;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: var(--pt-muted);
+}
+
+@keyframes pt-loader-out {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.loader {
+    width: 60px;
+    aspect-ratio: 4;
+    background: radial-gradient(circle closest-side, var(--pt-navy) 90%, #0000) 0/calc(100%/3) 100% no-repeat;
+    animation: l2 1s steps(3) infinite;
+}
+
+@keyframes l2 {
+    to {
+        background-position: 150%;
+    }
 }

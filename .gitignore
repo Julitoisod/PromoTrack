@@ -66,6 +66,11 @@ Vagrantfile
 # Database dumps written by App\Services\BackupService
 /writable/backups/
 
+# `php spark serve` runs with public/ as the working directory, so the relative
+# session.savePath in .env resolves to public/writable/session rather than the
+# real writable/ dir. The files are throwaway either way.
+/public/writable/
+
 php_errors.log
 
 #-------------------------

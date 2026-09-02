@@ -65,10 +65,6 @@ class SettingsController extends BaseController
 
         return view('admin/settings', [
             'title'       => 'System Settings',
-            'breadcrumbs' => [
-                'Dashboard' => site_url('/'),
-                'Settings'  => '',
-            ],
             'editable'   => self::EDITABLE,
             'values'     => $values,
             'backups'    => $this->backupService->list(),

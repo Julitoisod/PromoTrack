@@ -59,10 +59,6 @@ class PromotionPackagesController extends BaseController
 
         return view('packages/index', [
             'title'       => 'Promotion Packages',
-            'breadcrumbs' => [
-                'Dashboard' => site_url('/'),
-                'Packages'  => '',
-            ],
             'packages'      => $this->promotionPackageModel
                 ->listQuery($unitScopedId, $status !== null ? [$status] : null)
                 ->paginate(self::PER_PAGE),
@@ -137,11 +133,6 @@ class PromotionPackagesController extends BaseController
 
         return view('packages/show', [
             'title'       => 'Promotion Package ' . $package['package_number'],
-            'breadcrumbs' => [
-                'Dashboard' => site_url('/'),
-                'Packages'  => site_url('packages'),
-                $package['package_number'] => '',
-            ],
             'package'        => $package,
             'checklist'      => $this->packageDocumentModel->checklistFor((int) $package['id']),
             'history'        => $this->packageStatusHistoryModel->forPackage((int) $package['id']),

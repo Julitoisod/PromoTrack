@@ -1,0 +1,273 @@
+/* PromoTrack AFP-RF — split-panel styling for the Shield auth pages
+   (login, register, magic link). Loaded instead of app.css by
+   app/Views/auth/layout.php: the auth screens share none of the
+   dashboard's sidebar/navbar rules, and app.css offsets the body by the
+   navbar height, which these full-height pages must not inherit.
+
+   Every rule lives here rather than in a style attribute because
+   Content-Security-Policy keeps style-src-attr at 'self' and inline style
+   attributes cannot carry a nonce. */
+
+body.auth-page {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, var(--pt-blue) 0%, var(--pt-blue-deep) 100%);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* <main> is body's flex item; without a width it collapses to its content and
+   any Bootstrap .container inside it renders as a narrow column. */
+body.auth-page > main {
+    width: 100%;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 1.75rem;
+    overflow: hidden;
+    box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.28);
+}
+
+/* ---------- Left welcome panel ---------- */
+
+.auth-welcome {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 3.5rem 2.5rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pt-blue) 0%, var(--pt-blue-deep) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* The two decorative spheres from the reference layout: gradients, not
+   images, so nothing extra has to be fetched or vendored. */
+.auth-welcome::before,
+.auth-welcome::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.auth-welcome::before {
+    width: 22rem;
+    height: 22rem;
+    top: -9rem;
+    right: -8rem;
+    background: radial-gradient(circle at 35% 30%, #4b93ff, #0b45a8);
+    opacity: 0.55;
+}
+
+.auth-welcome::after {
+    width: 15rem;
+    height: 15rem;
+    bottom: -5rem;
+    left: -4rem;
+    background: radial-gradient(circle at 35% 30%, #5c9dff, #0a3d94);
+    opacity: 0.65;
+}
+
+.auth-welcome h1 {
+    font-size: 2.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+}
+
+.auth-welcome h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+}
+
+.auth-welcome p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.82);
+    margin-bottom: 0;
+}
+
+/* ---------- Right form panel ---------- */
+
+.auth-form {
+    padding: 3rem 3rem 2.5rem;
+}
+
+.auth-form h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #1b1f28;
+    margin-bottom: 0.35rem;
+}
+
+.auth-form .auth-lede {
+    font-size: 0.85rem;
+    color: #7a8494;
+    margin-bottom: 1.75rem;
+}
+
+/* Flat grey field with a leading icon, per the reference. */
+.auth-field {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: var(--pt-field);
+    border-radius: 0.5rem;
+    padding: 0.35rem 1rem;
+    margin-bottom: 0.85rem;
+}
+
+.auth-field i {
+    color: #6b7686;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.auth-field .form-control,
+.auth-field .form-select {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0.65rem 0;
+    font-size: 0.95rem;
+    color: #1b1f28;
+}
+
+.auth-field .form-control:focus,
+.auth-field .form-select:focus {
+    background: transparent;
+    box-shadow: none;
+}
+
+.auth-field:focus-within {
+    outline: 2px solid var(--pt-blue);
+    outline-offset: 1px;
+}
+
+.auth-field .auth-reveal {
+    border: 0;
+    background: none;
+    padding: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #6b7686;
+    flex-shrink: 0;
+}
+
+.auth-field .auth-reveal:hover {
+    color: var(--pt-navy);
+}
+
+.auth-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.82rem;
+    margin: 0.5rem 0 1.5rem;
+}
+
+.auth-meta a {
+    color: var(--pt-blue);
+    text-decoration: none;
+}
+
+.auth-meta a:hover {
+    text-decoration: underline;
+}
+
+.auth-submit {
+    width: 100%;
+    padding: 0.8rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: var(--pt-navy);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.auth-submit:hover {
+    background: #0d2f66;
+}
+
+.auth-alt {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #1b1f28;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #1b1f28;
+    font-size: 1.05rem;
+    text-align: center;
+    text-decoration: none;
+}
+
+.auth-alt:hover {
+    background: #f5f7fa;
+    color: #1b1f28;
+}
+
+/* "Or" rule between the two buttons. */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin: 1.1rem 0;
+    color: #9aa3b1;
+    font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dfe3ea;
+}
+
+.auth-foot {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #7a8494;
+    margin: 1.5rem 0 0;
+}
+
+.auth-foot a {
+    color: var(--pt-blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-foot a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+    .auth-welcome {
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+
+    .auth-welcome h1 {
+        font-size: 2rem;
+    }
+
+    .auth-form {
+        padding: 2rem 1.75rem;
+    }
+}

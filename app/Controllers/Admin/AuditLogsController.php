@@ -48,10 +48,6 @@ class AuditLogsController extends BaseController
 
         return view('admin/audit_logs', [
             'title'       => 'Audit Logs',
-            'breadcrumbs' => [
-                'Dashboard'  => site_url('/'),
-                'Audit Logs' => '',
-            ],
             'rows'        => $rows,
             'pager'       => $query->pager,
             'filters'     => $filters,

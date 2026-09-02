@@ -9,8 +9,41 @@
         var toggleButton = document.getElementById('sidebarToggle');
         var sidebar = document.getElementById('appSidebar');
 
+        var DESKTOP_MIN_WIDTH = 992;
+        var RAIL_STORAGE_KEY = 'promotrack.sidebarCollapsed';
+
+        // The stored rail preference is a convenience; a browser that refuses
+        // storage (private mode, blocked site data) must still render the page.
+        var railStore = {
+            read: function () {
+                try {
+                    return window.localStorage.getItem(RAIL_STORAGE_KEY) === '1';
+                } catch (error) {
+                    return false;
+                }
+            },
+            write: function (collapsed) {
+                try {
+                    window.localStorage.setItem(RAIL_STORAGE_KEY, collapsed ? '1' : '0');
+                } catch (error) {
+                    // Preference not persisted; the current page still works.
+                }
+            },
+        };
+
+        if (railStore.read()) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
         if (toggleButton && sidebar) {
             toggleButton.addEventListener('click', function () {
+                // One control, two jobs: off-canvas on phones, icon rail on desktop.
+                if (window.innerWidth >= DESKTOP_MIN_WIDTH) {
+                    var collapsed = document.body.classList.toggle('sidebar-collapsed');
+                    railStore.write(collapsed);
+                    return;
+                }
+
                 sidebar.classList.toggle('show');
             });
 

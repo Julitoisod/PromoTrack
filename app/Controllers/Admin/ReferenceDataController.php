@@ -91,11 +91,6 @@ class ReferenceDataController extends BaseController
 
         return view('admin/reference_data', [
             'title'       => $config['title'],
-            'breadcrumbs' => [
-                'Dashboard'      => site_url('/'),
-                'Reference Data' => '',
-                $config['title']  => '',
-            ],
             'set'      => $set,
             'sets'     => $this->setIndex(),
             'config'   => $config,

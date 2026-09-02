@@ -72,10 +72,6 @@ class PromotionRulesController extends BaseController
 
         return view('admin/promotion_rules/index', [
             'title'       => 'Promotion Rules',
-            'breadcrumbs' => [
-                'Dashboard'        => site_url('/'),
-                'Promotion Rules'  => '',
-            ],
             'rules' => $rules,
             'ranks' => $this->rankModel->activeRanksOrdered(),
         ]);
@@ -95,11 +91,6 @@ class PromotionRulesController extends BaseController
 
         return view('admin/promotion_rules/show', [
             'title'       => 'Promotion Rule',
-            'breadcrumbs' => [
-                'Dashboard'       => site_url('/'),
-                'Promotion Rules' => site_url('admin/rules'),
-                $rule['rule_name'] => '',
-            ],
             'rule'             => $rule,
             'versions'         => $versions,
             'effective'        => $this->versionModel->resolveEffectiveVersion((int) $rule['id']),

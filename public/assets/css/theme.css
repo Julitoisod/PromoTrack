@@ -1,0 +1,16 @@
+/* PromoTrack AFP-RF — brand palette.
+   Loaded first by both layouts (layouts/main.php and auth/layout.php), which
+   otherwise share no stylesheet, so the brand colours have one definition. */
+
+:root {
+    --pt-blue: #1668dc;
+    --pt-blue-deep: #0b3f96;
+    --pt-navy: #123a7a;
+    --pt-ink: #1b1f28;
+    --pt-muted: #7a8494;
+    --pt-line: #e6eaf1;
+    --pt-field: #f0f2f6;
+    --pt-canvas: #f4f6fb;
+    --pt-radius: 0.85rem;
+    --pt-shadow: 0 0.35rem 1.25rem rgba(18, 58, 122, 0.08);
+}

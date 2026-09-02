@@ -35,7 +35,6 @@ class Home extends BaseController
 
         return view('dashboard', [
             'title'               => 'Dashboard',
-            'breadcrumbs'         => ['Dashboard' => ''],
             'eligibleCount'       => $statusCounts['eligible'] ?? 0,
             'overdueCount'        => $statusCounts['overdue'] ?? 0,
             'notYetEligibleCount' => $statusCounts['not_yet_eligible'] ?? 0,

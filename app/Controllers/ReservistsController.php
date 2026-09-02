@@ -69,10 +69,6 @@ class ReservistsController extends BaseController
 
         return view('reservists/index', [
             'title'       => 'Reservists',
-            'breadcrumbs' => [
-                'Dashboard'  => site_url('/'),
-                'Reservists' => '',
-            ],
             'reservists' => $reservists,
             'pager'      => $this->reservistModel->pager,
             'search'     => $search,
@@ -86,11 +82,6 @@ class ReservistsController extends BaseController
     {
         return view('reservists/create', [
             'title'       => 'Add Reservist',
-            'breadcrumbs' => [
-                'Dashboard'  => site_url('/'),
-                'Reservists' => site_url('reservists'),
-                'Add'        => '',
-            ],
             'units'            => $this->unitModel->activeUnits(),
             'ranks'             => $this->rankModel->activeRanksOrdered(),
             'educationTracks'   => $this->educationTrackModel->activeTracks(),
@@ -124,11 +115,6 @@ class ReservistsController extends BaseController
 
         return view('reservists/show', [
             'title'       => 'Reservist Profile',
-            'breadcrumbs' => [
-                'Dashboard'  => site_url('/'),
-                'Reservists' => site_url('reservists'),
-                $reservist->getFullName() => '',
-            ],
             'reservist' => $reservist,
             'unit'      => $reservist->organizational_unit_id !== null
                 ? $this->unitModel->find($reservist->organizational_unit_id)
@@ -161,11 +147,6 @@ class ReservistsController extends BaseController
 
         return view('reservists/edit', [
             'title'       => 'Edit Reservist',
-            'breadcrumbs' => [
-                'Dashboard'  => site_url('/'),
-                'Reservists' => site_url('reservists'),
-                'Edit'       => '',
-            ],
             'reservist'         => $reservist,
             'units'             => $this->unitModel->activeUnits(),
             'ranks'             => $this->rankModel->activeRanksOrdered(),

@@ -5,7 +5,12 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 $routes->get('/', 'Home::index', ['filter' => 'session']);
 
-service('auth')->routes($routes);
+service('auth')->routes($routes, ['except' => ['register']]);
+
+// Registration collects the PromoTrack profile fields (unit, AFP serial, full name)
+// that Shield's own RegisterController does not know about.
+$routes->get('register', 'Auth\RegisterController::registerView', ['as' => 'register']);
+$routes->post('register', 'Auth\RegisterController::registerAction');
 
 $routes->group('reservists', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('/', 'ReservistsController::index', ['filter' => 'permission:reservists.view']);

@@ -2,46 +2,35 @@
 
 <?= $this->section('content') ?>
 <?php $dashUser = auth()->user(); ?>
-<h1 class="h3 mb-4">Welcome, <?= esc($dashUser->username ?? $dashUser->email ?? 'User') ?></h1>
+<h1 class="page-title">Welcome, <?= esc($dashUser->username ?? $dashUser->email ?? 'User') ?></h1>
 
 <div class="row g-3 mb-3">
-    <div class="col-sm-6 col-lg-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Eligible for Promotion</div>
-                <div class="h3 mb-0 text-success"><?= esc((string) $eligibleCount) ?></div>
+    <?php // One tile per headline figure; the four differ only by label, value and accent.
+    foreach ([
+        ['label' => 'Eligible for Promotion', 'value' => $eligibleCount,    'icon' => 'bi-person-check', 'tone' => 'success'],
+        ['label' => 'Overdue Promotions',     'value' => $overdueCount,     'icon' => 'bi-exclamation-triangle', 'tone' => 'danger'],
+        ['label' => 'Pending Packages',       'value' => $pendingPackages,  'icon' => 'bi-hourglass-split', 'tone' => 'warning'],
+        ['label' => 'Promotions Issued',      'value' => $promotionsIssued, 'icon' => 'bi-award', 'tone' => 'primary'],
+    ] as $tile): ?>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="stat-icon text-<?= esc($tile['tone']) ?> bg-<?= esc($tile['tone']) ?>-subtle">
+                        <i class="bi <?= esc($tile['icon']) ?>"></i>
+                    </span>
+                    <div>
+                        <div class="stat-label"><?= esc($tile['label']) ?></div>
+                        <div class="stat-value text-<?= esc($tile['tone']) ?>"><?= esc((string) $tile['value']) ?></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Overdue Promotions</div>
-                <div class="h3 mb-0 text-danger"><?= esc((string) $overdueCount) ?></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Pending Packages</div>
-                <div class="h3 mb-0 text-warning"><?= esc((string) $pendingPackages) ?></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Promotions Issued</div>
-                <div class="h3 mb-0 text-primary"><?= esc((string) $promotionsIssued) ?></div>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <div class="row g-3">
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Promotion Package Pipeline</div>
             <div class="card-body">
                 <?php if (empty($packageCounts)): ?>
@@ -53,7 +42,7 @@
         </div>
     </div>
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Promotions Issued (last 12 months)</div>
             <div class="card-body">
                 <?php if (array_sum($promotionsByMonth) === 0): ?>
@@ -66,7 +55,7 @@
     </div>
 
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Average Days in Stage</div>
             <div class="card-body">
                 <?php if ($averageDaysInStatus === []): ?>
@@ -83,7 +72,7 @@
     </div>
 
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-header">Quick Links</div>
             <div class="card-body d-flex flex-column gap-2">
                 <?php if ($dashUser !== null && $dashUser->can('reservists.view')): ?>

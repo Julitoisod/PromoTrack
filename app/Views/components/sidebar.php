@@ -2,119 +2,129 @@
 /**
  * Left navigation sidebar. Included by layouts/main.php.
  *
- * Menu items are gated by CodeIgniter Shield permissions so a user only
- * ever sees links they are actually authorized to open. Modules not yet
- * implemented in the current phase are rendered as disabled "Soon"
- * placeholders so the full information architecture from the master
- * spec is visible without producing dead/broken links.
+ * The menu is a data structure rather than repeated markup: every entry is
+ * gated by a Shield permission so a user only ever sees links they are
+ * authorized to open, and an entry with a null `path` is a module that is not
+ * built yet, rendered as a disabled "Soon" placeholder so the information
+ * architecture from the master spec stays visible without dead links.
+ *
+ * Groups collapse with Bootstrap's own Collapse plugin (already vendored) and
+ * open automatically when they contain the page being viewed.
  */
-$sidebarUser   = auth()->user();
-$currentPath   = uri_string();
-$can           = static fn (string $permission): bool => $sidebarUser !== null && $sidebarUser->can($permission);
-$isActive      = static fn (string $path): string => $currentPath === $path ? 'active' : '';
+$sidebarUser = auth()->user();
+$currentPath = uri_string();
+$can         = static fn (?string $permission): bool => $permission === null
+    || ($sidebarUser !== null && $sidebarUser->can($permission));
+
+$menu = [
+    ['icon' => 'bi-speedometer2', 'label' => 'Dashboard', 'path' => '', 'perm' => null],
+    ['icon' => 'bi-people', 'label' => 'Reservists', 'path' => 'reservists', 'perm' => 'reservists.view'],
+
+    ['group' => 'Promotion Management', 'id' => 'navPromotion', 'items' => [
+        ['icon' => 'bi-folder2-open', 'label' => 'Promotion Packages', 'path' => 'packages', 'perm' => 'reservists.view'],
+        ['icon' => 'bi-building-check', 'label' => 'CDC Validation Queue', 'path' => 'packages?status=ready_for_cdc_validation', 'perm' => 'packages.validate_at_cdc'],
+        ['icon' => 'bi-diagram-3', 'label' => 'RCDG Review Inbox', 'path' => 'packages?status=submitted_to_rcdg', 'perm' => 'packages.review_at_rcdg'],
+        ['icon' => 'bi-send-check', 'label' => 'External Forwarding', 'path' => 'packages?status=rcdg_endorsed', 'perm' => 'forwarding.record'],
+        ['icon' => 'bi-award', 'label' => 'Promotion Orders', 'path' => 'packages?status=approved', 'perm' => 'promotion_orders.record'],
+    ]],
+
+    ['group' => 'Reports', 'id' => 'navReports', 'items' => [
+        ['icon' => 'bi-file-earmark-bar-graph', 'label' => 'Promotion Backlog Report', 'path' => 'reports/backlog', 'perm' => 'reports.generate', 'blank' => true],
+        ['icon' => 'bi-filetype-csv', 'label' => 'Backlog Spreadsheet', 'path' => 'reports/backlog.csv', 'perm' => 'reports.generate'],
+    ]],
+
+    ['group' => 'Administration', 'id' => 'navAdmin', 'items' => [
+        ['icon' => 'bi-diagram-2', 'label' => 'Reference Data', 'path' => 'admin/reference', 'perm' => 'units.manage'],
+        ['icon' => 'bi-journal-check', 'label' => 'Promotion Rules', 'path' => 'admin/rules', 'perm' => 'rules.manage'],
+        ['icon' => 'bi-shield-lock', 'label' => 'Audit Logs', 'path' => 'admin/audit-logs', 'perm' => 'audit_logs.view'],
+        ['icon' => 'bi-gear', 'label' => 'Settings & Backups', 'path' => 'admin/settings', 'perm' => 'settings.manage'],
+        ['icon' => 'bi-person-gear', 'label' => 'Users', 'path' => null, 'perm' => 'users.manage'],
+    ]],
+];
+
+// Several entries point at the same controller with a different `status`
+// filter, so the comparison has to include the query string: matching on the
+// path alone lights up all five Promotion Management links at once.
+$currentQuery = service('request')->getUri()->getQuery();
+$currentUri   = $currentQuery === '' ? $currentPath : $currentPath . '?' . $currentQuery;
+
+$isCurrent = static function (array $item) use ($currentPath, $currentUri): bool {
+    if ($item['path'] === null) {
+        return false;
+    }
+
+    if ($item['path'] === $currentUri) {
+        return true;
+    }
+
+    // A child page keeps its parent lit: /reservists/12/edit belongs to
+    // Reservists. Entries carrying a query string are excluded, or every
+    // status filter would match its own base path, and so is the dashboard,
+    // whose empty path is a prefix of everything.
+    return $item['path'] !== ''
+        && ! str_contains((string) $item['path'], '?')
+        && str_starts_with($currentPath, $item['path'] . '/');
+};
 ?>
-<aside class="sidebar bg-light border-end" id="appSidebar">
-    <div class="sidebar-inner p-3">
-        <ul class="nav nav-pills flex-column gap-1">
-            <li class="nav-item">
-                <a class="nav-link <?= $isActive('') ?>" href="<?= esc(site_url('/')) ?>">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                </a>
-            </li>
-
-            <?php if ($can('reservists.view')): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?= $isActive('reservists') ?>" href="<?= esc(site_url('reservists')) ?>">
-                        <i class="bi bi-people me-2"></i> Reservists
-                    </a>
-                </li>
-            <?php endif; ?>
-
-            <li class="nav-item mt-3">
-                <span class="text-uppercase text-muted small fw-semibold px-2">Promotion Management</span>
-            </li>
-            <?php if ($can('reservists.view')): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?= $isActive('packages') ?>" href="<?= esc(site_url('packages')) ?>">
-                        <i class="bi bi-folder2-open me-2"></i> Promotion Packages
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($can('packages.validate_at_cdc')): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('packages?status=ready_for_cdc_validation')) ?>">
-                        <i class="bi bi-building-check me-2"></i> CDC Validation Queue
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($can('packages.review_at_rcdg')): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('packages?status=submitted_to_rcdg')) ?>">
-                        <i class="bi bi-diagram-3 me-2"></i> RCDG Review Inbox
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($can('forwarding.record')): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('packages?status=rcdg_endorsed')) ?>">
-                        <i class="bi bi-send-check me-2"></i> External Forwarding
-                    </a>
-                </li>
-            <?php endif; ?>
-            <?php if ($can('promotion_orders.record')): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('packages?status=approved')) ?>">
-                        <i class="bi bi-award me-2"></i> Promotion Orders
-                    </a>
-                </li>
-            <?php endif; ?>
-
-            <?php if ($can('reports.generate')): ?>
-                <li class="nav-item mt-3">
-                    <span class="text-uppercase text-muted small fw-semibold px-2">Reports</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('reports/backlog')) ?>" target="_blank">
-                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Promotion Backlog Report
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= esc(site_url('reports/backlog.csv')) ?>">
-                        <i class="bi bi-filetype-csv me-2"></i> Backlog Spreadsheet
-                    </a>
-                </li>
-            <?php endif; ?>
-
-            <?php if ($can('users.manage') || $can('rules.manage') || $can('units.manage') || $can('settings.manage') || $can('audit_logs.view')): ?>
-                <li class="nav-item mt-3">
-                    <span class="text-uppercase text-muted small fw-semibold px-2">Administration</span>
-                </li>
-                <?php
-                // `path` null means the module is still unbuilt and renders as
-                // a disabled placeholder rather than a dead link.
-                foreach ([
-                    ['perm' => 'units.manage', 'icon' => 'bi-diagram-2', 'label' => 'Reference Data', 'path' => 'admin/reference'],
-                    ['perm' => 'rules.manage', 'icon' => 'bi-journal-check', 'label' => 'Promotion Rules', 'path' => 'admin/rules'],
-                    ['perm' => 'audit_logs.view', 'icon' => 'bi-shield-lock', 'label' => 'Audit Logs', 'path' => 'admin/audit-logs'],
-                    ['perm' => 'settings.manage', 'icon' => 'bi-gear', 'label' => 'Settings & Backups', 'path' => 'admin/settings'],
-                    ['perm' => 'users.manage', 'icon' => 'bi-person-gear', 'label' => 'Users', 'path' => null],
-                ] as $adminItem): ?>
-                    <?php if ($can($adminItem['perm'])): ?>
+<aside class="sidebar" id="appSidebar">
+    <nav class="sidebar-inner" aria-label="Main">
+        <ul class="nav flex-column gap-1">
+            <?php foreach ($menu as $entry): ?>
+                <?php if (! isset($entry['group'])): ?>
+                    <?php if ($can($entry['perm'])): ?>
                         <li class="nav-item">
-                            <?php if ($adminItem['path'] === null): ?>
-                                <span class="nav-link disabled d-flex justify-content-between align-items-center">
-                                    <span><i class="bi <?= esc($adminItem['icon']) ?> me-2"></i> <?= esc($adminItem['label']) ?></span>
-                                    <span class="badge text-bg-secondary">Soon</span>
-                                </span>
-                            <?php else: ?>
-                                <a class="nav-link <?= $isActive($adminItem['path']) ?>" href="<?= esc(site_url($adminItem['path'])) ?>">
-                                    <i class="bi <?= esc($adminItem['icon']) ?> me-2"></i> <?= esc($adminItem['label']) ?>
-                                </a>
-                            <?php endif; ?>
+                            <a class="nav-link <?= $isCurrent($entry) ? 'active' : '' ?>"
+                               href="<?= esc(site_url($entry['path'])) ?>" title="<?= esc($entry['label']) ?>">
+                                <i class="bi <?= esc($entry['icon']) ?>"></i>
+                                <span class="nav-text"><?= esc($entry['label']) ?></span>
+                            </a>
                         </li>
                     <?php endif; ?>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                    <?php continue; ?>
+                <?php endif; ?>
+
+                <?php
+                $items = array_values(array_filter(
+                    $entry['items'],
+                    static fn (array $item): bool => $can($item['perm']),
+                ));
+
+                if ($items === []) {
+                    continue;
+                }
+
+                // Keep a group expanded while it contains the page being viewed.
+                $open = array_filter($items, $isCurrent) !== [];
+                ?>
+                <li class="nav-item nav-group">
+                    <button class="nav-group-toggle <?= $open ? '' : 'collapsed' ?>" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#<?= esc($entry['id']) ?>"
+                            aria-expanded="<?= $open ? 'true' : 'false' ?>" aria-controls="<?= esc($entry['id']) ?>">
+                        <span><?= esc($entry['group']) ?></span>
+                        <i class="bi bi-chevron-right nav-chevron"></i>
+                    </button>
+                    <ul class="nav flex-column gap-1 collapse <?= $open ? 'show' : '' ?>" id="<?= esc($entry['id']) ?>">
+                        <?php foreach ($items as $item): ?>
+                            <li class="nav-item">
+                                <?php if ($item['path'] === null): ?>
+                                    <span class="nav-link disabled" title="<?= esc($item['label']) ?>">
+                                        <i class="bi <?= esc($item['icon']) ?>"></i>
+                                        <span class="nav-text"><?= esc($item['label']) ?></span>
+                                        <span class="badge text-bg-secondary ms-auto">Soon</span>
+                                    </span>
+                                <?php else: ?>
+                                    <a class="nav-link <?= $isCurrent($item) ? 'active' : '' ?>"
+                                       href="<?= esc(site_url($item['path'])) ?>" title="<?= esc($item['label']) ?>"
+                                       <?= ($item['blank'] ?? false) ? 'target="_blank"' : '' ?>>
+                                        <i class="bi <?= esc($item['icon']) ?>"></i>
+                                        <span class="nav-text"><?= esc($item['label']) ?></span>
+                                    </a>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </li>
+            <?php endforeach; ?>
         </ul>
-    </div>
+    </nav>
 </aside>
