@@ -96,7 +96,10 @@ php_errors.log
 #-------------------------
 # Composer
 #-------------------------
-vendor/
+# Anchored to the project root: a bare `vendor/` also matches
+# public/assets/vendor/, which silently kept the six vendored front-end
+# libraries out of the repo (and therefore off the deployed server).
+/vendor/
 composer.phar
 
 #-------------------------
