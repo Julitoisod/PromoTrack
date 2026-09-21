@@ -59,6 +59,19 @@ class PromotionAssessmentModel extends Model
     }
 
     /**
+     * Returns $reservistId's most recent assessment against any target
+     * rank -- the one whose `promotion_status` is the reservist's
+     * current standing (pending when this returns null, because none
+     * has been run yet).
+     */
+    public function latestFor(int $reservistId): ?array
+    {
+        return $this->where('reservist_id', $reservistId)
+            ->orderBy('id', 'DESC')
+            ->first();
+    }
+
+    /**
      * Returns every assessment on file for $reservistId, most recent
      * first, for display on the reservist profile page.
      */

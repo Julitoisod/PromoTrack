@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\ReservistModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Shield\Entities\User;
@@ -27,6 +28,14 @@ abstract class BaseController extends \CodeIgniter\Controller
      * The creation of dynamic property is deprecated in PHP 8.2.
      */
     protected $session;
+
+    /**
+     * Memoized `ownReservistId()` result; $ownReservistResolved
+     * distinguishes "not looked up yet" from "looked up, owns none".
+     */
+    private ?int $ownReservistId = null;
+
+    private bool $ownReservistResolved = false;
 
     /**
      * Helpers loaded for every controller that extends this class.
@@ -84,6 +93,14 @@ abstract class BaseController extends \CodeIgniter\Controller
             return false;
         }
 
+        if ($this->isReservistAccount()) {
+            // A reservist is scoped to their own record, never to a unit:
+            // "same unit" would hand them every colleague's package. Their
+            // surfaces authorize through canAccessPackageRow() instead, so
+            // failing here keeps anything not yet updated closed.
+            return false;
+        }
+
         if (! $user->inGroup('unit_s1_clerk')) {
             // Higher-echelon roles are not restricted to a single unit.
             return true;
@@ -91,6 +108,65 @@ abstract class BaseController extends \CodeIgniter\Controller
 
         return $organizationalUnitId !== null
             && $organizationalUnitId === (int) $user->organizational_unit_id;
+    }
+
+    /**
+     * True when the signed-in account is a reservist's own account
+     * rather than a staff account.
+     */
+    protected function isReservistAccount(): bool
+    {
+        $user = $this->currentUser();
+
+        return $user !== null && $user->inGroup('reservist');
+    }
+
+    /**
+     * The `reservists.id` this account owns, or null for a staff account
+     * (and for a reservist account whose record could not be linked at
+     * sign-up). Resolved once per request.
+     */
+    protected function ownReservistId(): ?int
+    {
+        if ($this->ownReservistResolved) {
+            return $this->ownReservistId;
+        }
+
+        $this->ownReservistResolved = true;
+        $user                      = $this->currentUser();
+
+        if ($user === null) {
+            return $this->ownReservistId = null;
+        }
+
+        $reservist = (new ReservistModel())->findByUserId((int) $user->id);
+
+        return $this->ownReservistId = $reservist?->id;
+    }
+
+    /**
+     * Authorizes a row that carries a promotion package's
+     * `reservist_id` and `organizational_unit_id` -- a package itself,
+     * or a package document joined to its package.
+     *
+     * Two different ownership questions meet here, which is why it is one
+     * method rather than a check repeated per controller: staff are
+     * scoped by organizational unit, a reservist is scoped to their own
+     * record and nothing else.
+     */
+    protected function canAccessPackageRow(array $row): bool
+    {
+        if ($this->isReservistAccount()) {
+            $ownReservistId = $this->ownReservistId();
+
+            return $ownReservistId !== null
+                && isset($row['reservist_id'])
+                && (int) $row['reservist_id'] === $ownReservistId;
+        }
+
+        return $this->belongsToUserUnit(
+            isset($row['organizational_unit_id']) ? (int) $row['organizational_unit_id'] : null
+        );
     }
 
     /**

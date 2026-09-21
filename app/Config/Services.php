@@ -22,6 +22,7 @@ use App\Models\PromotionRuleVersionModel;
 use App\Models\ReservistModel;
 use App\Models\ReservistTrainingModel;
 use App\Models\TrainingTypeModel;
+use App\Models\UserModel;
 use App\Services\AuditLogService;
 use App\Services\DocumentValidationService;
 use App\Services\EligibilityService;
@@ -29,6 +30,7 @@ use App\Services\FileStorageService;
 use App\Services\NotificationService;
 use App\Services\PackageWorkflowService;
 use App\Services\ReportService;
+use App\Services\ReservistRegistrationService;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -138,6 +140,15 @@ class Services extends BaseService
         }
 
         return new NotificationService(new NotificationModel());
+    }
+
+    public static function reservistRegistrationService(bool $getShared = true): ReservistRegistrationService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('reservistRegistrationService');
+        }
+
+        return new ReservistRegistrationService(new ReservistModel(), new UserModel());
     }
 
     public static function reportService(bool $getShared = true): ReportService

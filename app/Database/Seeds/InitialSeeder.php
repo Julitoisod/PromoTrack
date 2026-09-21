@@ -15,7 +15,7 @@ use CodeIgniter\Database\Seeder;
  *
  * Note: Shield groups and permissions (superadmin, system_administrator,
  * unit_s1_clerk, cdc_administrator, rcdg_reviewer, commander_viewer,
- * records_officer) are defined declaratively in `app/Config/AuthGroups.php`
+ * records_officer, reservist) are defined declaratively in `app/Config/AuthGroups.php`
  * and are not stored in the database, so no seeder is required for them.
  */
 class InitialSeeder extends Seeder
@@ -23,6 +23,7 @@ class InitialSeeder extends Seeder
     public function run(): void
     {
         $this->call(OrganizationalUnitsSeeder::class);
+        $this->call(CompanyUnitsSeeder::class);
         $this->call(RanksSeeder::class);
         $this->call(EducationTracksSeeder::class);
         $this->call(TrainingTypesSeeder::class);

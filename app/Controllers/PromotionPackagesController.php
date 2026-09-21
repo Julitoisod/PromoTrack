@@ -180,7 +180,7 @@ class PromotionPackagesController extends BaseController
             throw new RuntimeException("Promotion package #{$id} was not found.");
         }
 
-        if (! $this->belongsToUserUnit((int) $package['organizational_unit_id'])) {
+        if (! $this->canAccessPackageRow($package)) {
             throw new RuntimeException('You are not authorized to access this promotion package.');
         }
 

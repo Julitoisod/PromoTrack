@@ -69,8 +69,17 @@ $statusBadge = match ($reservist->status) {
                     <dt class="col-sm-5">Organizational Unit</dt>
                     <dd class="col-sm-7"><?= esc($unit['unit_name'] ?? '—') ?></dd>
 
+                    <dt class="col-sm-5">Company</dt>
+                    <dd class="col-sm-7"><?= esc($company['unit_name'] ?? '—') ?></dd>
+
                     <dt class="col-sm-5">Education Track</dt>
                     <dd class="col-sm-7"><?= esc($educationTrack['track_name'] ?? '—') ?></dd>
+
+                    <dt class="col-sm-5">Schooling</dt>
+                    <dd class="col-sm-7"><?= esc($reservist->getSchoolingLabel()) ?></dd>
+
+                    <dt class="col-sm-5">Promotion Status</dt>
+                    <dd class="col-sm-7"><?= view('components/promotion_status', ['status' => $promotionStatus]) ?></dd>
 
                     <dt class="col-sm-5">Date of Enlistment</dt>
                     <dd class="col-sm-7"><?= esc($reservist->date_of_enlistment?->toDateString() ?? '—') ?></dd>

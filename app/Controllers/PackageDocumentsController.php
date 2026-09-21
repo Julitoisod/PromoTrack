@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Libraries\WorkflowStateMachine;
 use App\Models\DocumentReviewModel;
 use App\Models\DocumentVersionModel;
 use App\Models\PackageDocumentModel;
@@ -33,11 +34,35 @@ class PackageDocumentsController extends BaseController
         $this->waiverRequestModel   = new WaiverRequestModel();
     }
 
+    /**
+     * The package statuses a document may still be uploaded against:
+     * while the package is with the unit, and when the CDC or the RCDG
+     * has sent it back. Checked here and not only in the view, or a
+     * hand-made POST could replace a document the CDC is in the middle
+     * of validating.
+     *
+     * @var list<string>
+     */
+    private const UPLOADABLE_PACKAGE_STATUSES = [
+        'draft',
+        'requirements_incomplete',
+        'returned_to_unit',
+        'returned_by_rcdg',
+    ];
+
     public function upload(?int $packageDocumentId = null): RedirectResponse
     {
         $packageDocument = $this->findAccessibleOrFail($packageDocumentId);
         $file            = $this->request->getFile('document');
         $user            = $this->currentUser();
+
+        if (! in_array($packageDocument['package_status'], self::UPLOADABLE_PACKAGE_STATUSES, true)) {
+            return $this->backToPackage(
+                $packageDocument,
+                'error',
+                'Documents can no longer be uploaded: this package has already left the unit.'
+            );
+        }
 
         if ($file === null) {
             return $this->backToPackage($packageDocument, 'error', 'No file was selected.');
@@ -65,13 +90,22 @@ class PackageDocumentsController extends BaseController
     {
         $packageDocument = $this->findAccessibleOrFail($packageDocumentId);
 
+        if (($refusal = $this->refuseIfPackageIsClosed($packageDocument)) !== null) {
+            return $refusal;
+        }
+
         return $this->recordReviewDecision($packageDocument, 'verified');
     }
 
     public function reject(?int $packageDocumentId = null): RedirectResponse
     {
         $packageDocument = $this->findAccessibleOrFail($packageDocumentId);
-        $remarks         = trim((string) $this->request->getPost('remarks'));
+
+        if (($refusal = $this->refuseIfPackageIsClosed($packageDocument)) !== null) {
+            return $refusal;
+        }
+
+        $remarks = trim((string) $this->request->getPost('remarks'));
 
         if ($remarks === '') {
             return $this->backToPackage($packageDocument, 'error', 'Remarks are required to reject a document.');
@@ -83,7 +117,12 @@ class PackageDocumentsController extends BaseController
     public function waive(?int $packageDocumentId = null): RedirectResponse
     {
         $packageDocument = $this->findAccessibleOrFail($packageDocumentId);
-        $justification   = trim((string) $this->request->getPost('justification'));
+
+        if (($refusal = $this->refuseIfPackageIsClosed($packageDocument)) !== null) {
+            return $refusal;
+        }
+
+        $justification = trim((string) $this->request->getPost('justification'));
 
         if ($justification === '') {
             return $this->backToPackage($packageDocument, 'error', 'A justification is required to waive a document.');
@@ -124,12 +163,41 @@ class PackageDocumentsController extends BaseController
 
         $packageDocument = $this->packageDocumentModel->findWithPackage((int) $version['package_document_id']);
 
-        if ($packageDocument === null || ! $this->belongsToUserUnit((int) $packageDocument['organizational_unit_id'])) {
+        if ($packageDocument === null || ! $this->canAccessPackageRow($packageDocument)) {
             throw new RuntimeException('You are not authorized to access this document.');
         }
 
         return $this->response->download($version['storage_path'], null)
             ->setFileName($version['original_filename']);
+    }
+
+    /**
+     * Refuses a review decision once the package has reached a terminal
+     * status, returning the redirect to send back, or null to continue.
+     *
+     * `upload()` has its own, narrower gate (documents are frozen as soon
+     * as the package leaves the unit). Verifying, rejecting, and waiving
+     * stay open right through the CDC and RCDG stages, which is why they
+     * are gated on terminality instead -- but they must still stop at the
+     * end: a closed or disapproved package is a finished record, and a
+     * verify recorded against it writes a `document_reviews` row dated
+     * after the promotion order it supposedly justified.
+     *
+     * Terminality is `WorkflowStateMachine`'s to define, not this
+     * controller's, so it is asked rather than re-listed here.
+     */
+    private function refuseIfPackageIsClosed(array $packageDocument): ?RedirectResponse
+    {
+        if (! (new WorkflowStateMachine())->isTerminal((string) $packageDocument['package_status'])) {
+            return null;
+        }
+
+        return $this->backToPackage(
+            $packageDocument,
+            'error',
+            'This package is already ' . str_replace('_', ' ', (string) $packageDocument['package_status'])
+                . '; its documents can no longer be changed.'
+        );
     }
 
     private function recordReviewDecision(array $packageDocument, string $decision, ?string $remarks = null): RedirectResponse
@@ -177,7 +245,7 @@ class PackageDocumentsController extends BaseController
             throw new RuntimeException("Package document #{$id} was not found.");
         }
 
-        if (! $this->belongsToUserUnit((int) $packageDocument['organizational_unit_id'])) {
+        if (! $this->canAccessPackageRow($packageDocument)) {
             throw new RuntimeException('You are not authorized to access this promotion package.');
         }
 

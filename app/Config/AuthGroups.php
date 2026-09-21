@@ -29,11 +29,15 @@ class AuthGroups extends ShieldAuthGroups
      * --------------------------------------------------------------------
      * Default Group
      * --------------------------------------------------------------------
-     * New self-registration is disabled for PromoTrack AFP-RF (users are
-     * created only by an administrator). This default is kept only as a
-     * Shield requirement and is never actually assigned in practice.
+     * Self-registration creates a reservist, never a staff account: a
+     * reservist signs up to upload their own promotion documents, and
+     * every staff role is still assigned by an administrator.
+     *
+     * This used to be `unit_s1_clerk`, which meant anyone who signed up
+     * on the public form received a clerk's `reservists.create` /
+     * `reservists.update` rights over their whole unit.
      */
-    public string $defaultGroup = 'unit_s1_clerk';
+    public string $defaultGroup = 'reservist';
 
     /**
      * --------------------------------------------------------------------
@@ -71,6 +75,10 @@ class AuthGroups extends ShieldAuthGroups
             'title'       => 'Records Officer',
             'description' => 'Records external forwarding, external decisions, and promotion orders.',
         ],
+        'reservist' => [
+            'title'       => 'Reservist',
+            'description' => 'Views their own promotion record and uploads their own promotion documents. The group every self-registered account joins.',
+        ],
     ];
 
     /**
@@ -86,6 +94,7 @@ class AuthGroups extends ShieldAuthGroups
         'reservists.create'           => 'Create new reservist profiles',
         'reservists.view'              => 'View reservist profiles',
         'reservists.update'            => 'Update reservist profiles',
+        'promotions.view_own'          => 'View your own promotion record and document checklist',
         'assessments.compute'          => 'Run eligibility assessments against active promotion rules',
         'assessments.verify'           => 'Verify/countersign a computed eligibility assessment',
         'packages.create'              => 'Create a promotion package for a reservist',
@@ -122,6 +131,7 @@ class AuthGroups extends ShieldAuthGroups
             'units.*',
             'rules.*',
             'reservists.*',
+            'promotions.*',
             'assessments.*',
             'packages.*',
             'documents.*',
@@ -145,6 +155,9 @@ class AuthGroups extends ShieldAuthGroups
             'settings.manage',
             'backups.manage',
         ],
+        // The S1 clerk verifies the documents the reservist uploaded before
+        // the package leaves the unit -- the uploader and the verifier are
+        // still two different people, which is the point of the gate.
         'unit_s1_clerk' => [
             'reservists.create',
             'reservists.view',
@@ -153,6 +166,8 @@ class AuthGroups extends ShieldAuthGroups
             'packages.create',
             'packages.submit_to_cdc',
             'documents.upload',
+            'documents.verify',
+            'documents.reject',
             'reports.view',
             'reports.generate',
         ],
@@ -191,6 +206,14 @@ class AuthGroups extends ShieldAuthGroups
             'promotion_orders.record',
             'reports.view',
             'reports.generate',
+        ],
+        // Deliberately NOT `reservists.view`, which is the whole-roster
+        // listing. A reservist reaches only their own record, through the
+        // `/my` routes, and record ownership on top of this permission is
+        // enforced by `BaseController::canAccessPackageRow()`.
+        'reservist' => [
+            'promotions.view_own',
+            'documents.upload',
         ],
     ];
 }

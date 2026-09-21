@@ -8,6 +8,7 @@ use App\Models\EducationTrackModel;
 use App\Models\PhysicalFitnessTestModel;
 use App\Models\ProfessionalEligibilityModel;
 use App\Models\PromotionAssessmentModel;
+use App\Models\PromotionRuleModel;
 use App\Models\RankHistoryModel;
 use App\Models\RankModel;
 use App\Models\ReservistModel;
@@ -37,6 +38,7 @@ class ReservistsController extends BaseController
     private RankModel $rankModel;
     private EducationTrackModel $educationTrackModel;
     private PromotionAssessmentModel $promotionAssessmentModel;
+    private PromotionRuleModel $promotionRuleModel;
 
     public function __construct()
     {
@@ -45,6 +47,7 @@ class ReservistsController extends BaseController
         $this->rankModel                = new RankModel();
         $this->educationTrackModel      = new EducationTrackModel();
         $this->promotionAssessmentModel = new PromotionAssessmentModel();
+        $this->promotionRuleModel       = new PromotionRuleModel();
     }
 
     /**
@@ -63,15 +66,24 @@ class ReservistsController extends BaseController
         // of rows and the listing used to ship all of them on every visit.
         $search = trim((string) ($this->request->getGet('q') ?? ''));
 
+        // Answers "who is overdue?" without opening a report: the filter runs
+        // against each reservist's most recent assessment, and `pending` is
+        // the reservists nobody has assessed yet.
+        $promotionStatus = (string) ($this->request->getGet('promotion_status') ?? '');
+        $promotionStatus = in_array($promotionStatus, ReservistModel::PROMOTION_STATUSES, true)
+            ? $promotionStatus
+            : null;
+
         $reservists = $this->reservistModel
-            ->listQuery($unitScopedId, $search)
+            ->listQuery($unitScopedId, $search, $promotionStatus)
             ->paginate(self::PER_PAGE);
 
         return view('reservists/index', [
             'title'       => 'Reservists',
-            'reservists' => $reservists,
-            'pager'      => $this->reservistModel->pager,
-            'search'     => $search,
+            'reservists'      => $reservists,
+            'pager'           => $this->reservistModel->pager,
+            'search'          => $search,
+            'promotionStatus' => $promotionStatus,
         ]);
     }
 
@@ -83,6 +95,7 @@ class ReservistsController extends BaseController
         return view('reservists/create', [
             'title'       => 'Add Reservist',
             'units'            => $this->unitModel->activeUnits(),
+            'companies'         => $this->unitModel->activeCompanies(),
             'ranks'             => $this->rankModel->activeRanksOrdered(),
             'educationTracks'   => $this->educationTrackModel->activeTracks(),
             'restrictedUnitId'  => $this->restrictedUnitIdForCurrentUser(),
@@ -102,8 +115,10 @@ class ReservistsController extends BaseController
                 ->with('error', 'The reservist profile could not be created. Please review the errors below.');
         }
 
+        $status = $this->refreshAssessment((int) $this->reservistModel->getInsertID());
+
         return redirect()->to(site_url('reservists'))
-            ->with('success', 'Reservist profile created successfully.');
+            ->with('success', 'Reservist profile created successfully. ' . $this->assessmentNotice($status));
     }
 
     /**
@@ -119,6 +134,10 @@ class ReservistsController extends BaseController
             'unit'      => $reservist->organizational_unit_id !== null
                 ? $this->unitModel->find($reservist->organizational_unit_id)
                 : null,
+            'company' => $reservist->company_unit_id !== null
+                ? $this->unitModel->find($reservist->company_unit_id)
+                : null,
+            'promotionStatus' => $this->promotionAssessmentModel->latestFor($reservist->id)['promotion_status'] ?? null,
             'rank' => $reservist->current_rank_id !== null
                 ? $this->rankModel->find($reservist->current_rank_id)
                 : null,
@@ -149,6 +168,7 @@ class ReservistsController extends BaseController
             'title'       => 'Edit Reservist',
             'reservist'         => $reservist,
             'units'             => $this->unitModel->activeUnits(),
+            'companies'         => $this->unitModel->activeCompanies(),
             'ranks'             => $this->rankModel->activeRanksOrdered(),
             'educationTracks'   => $this->educationTrackModel->activeTracks(),
             'restrictedUnitId'  => $this->restrictedUnitIdForCurrentUser(),
@@ -170,14 +190,91 @@ class ReservistsController extends BaseController
         // actual SQL update since it is not in `$allowedFields`.
         $data['id'] = $reservist->id;
 
+        // Captured before the write: only a change to one of these four
+        // can change the verdict, and re-assessing on every edit would
+        // append an assessment row each time someone fixed a phone number.
+        $affectsEligibility = $this->eligibilityInputsChanged($reservist, $data);
+
         if (! $this->reservistModel->update($reservist->id, $data)) {
             return redirect()->back()->withInput()
                 ->with('errors', $this->reservistModel->errors())
                 ->with('error', 'The reservist profile could not be updated. Please review the errors below.');
         }
 
+        $notice = '';
+
+        if ($affectsEligibility) {
+            $notice = ' ' . $this->assessmentNotice($this->refreshAssessment($reservist->id));
+        }
+
         return redirect()->to(site_url('reservists/' . $reservist->id))
-            ->with('success', 'Reservist profile updated successfully.');
+            ->with('success', 'Reservist profile updated successfully.' . $notice);
+    }
+
+    /**
+     * True when $data changes one of the fields EligibilityService
+     * actually reads.
+     */
+    private function eligibilityInputsChanged(\App\Entities\Reservist $reservist, array $data): bool
+    {
+        foreach (['current_rank_id', 'date_of_last_promotion', 'date_of_enlistment', 'education_track_id'] as $field) {
+            $current = $reservist->{$field};
+
+            if ($current instanceof \CodeIgniter\I18n\Time) {
+                $current = $current->toDateString();
+            }
+
+            if ((string) ($data[$field] ?? '') !== (string) ($current ?? '')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Runs and records an eligibility assessment so a reservist lands in
+     * Eligible / Overdue / Not Yet Eligible the moment their record is
+     * encoded, instead of sitting at Pending until somebody remembers to
+     * press Assess.
+     *
+     * Returns the resulting promotion status, or null when the reservist
+     * has no rank or their rank has no configured promotion rule -- both
+     * of which leave them legitimately Pending.
+     */
+    private function refreshAssessment(int $reservistId): ?string
+    {
+        $reservist = $this->reservistModel->find($reservistId);
+
+        if ($reservist === null || $reservist->current_rank_id === null) {
+            return null;
+        }
+
+        $rule = $this->promotionRuleModel->findActiveRuleForFromRank((int) $reservist->current_rank_id);
+
+        if ($rule === null) {
+            return null;
+        }
+
+        $user = $this->currentUser();
+
+        $result = service('eligibilityService')->assessAndSave(
+            $reservistId,
+            (int) $rule['to_rank_id'],
+            $user !== null ? (int) $user->id : 0
+        );
+
+        return $result['promotion_status'];
+    }
+
+    private function assessmentNotice(?string $promotionStatus): string
+    {
+        return match ($promotionStatus) {
+            'overdue'          => 'Eligibility assessed: OVERDUE for promotion.',
+            'eligible'         => 'Eligibility assessed: ELIGIBLE for promotion.',
+            'not_yet_eligible' => 'Eligibility assessed: not yet eligible.',
+            default            => 'Eligibility is pending: no rank, or no promotion rule configured for their rank.',
+        };
     }
 
     /**
@@ -254,7 +351,14 @@ class ReservistsController extends BaseController
             'current_rank_id'         => $request->getPost('current_rank_id') ?: null,
             'date_of_last_promotion'  => $request->getPost('date_of_last_promotion') ?: null,
             'education_track_id'      => $request->getPost('education_track_id') ?: null,
+            'is_student'              => $request->getPost('is_student') ? 1 : 0,
+            // Dropped when the answer is "not a student", so a year level
+            // can never linger against someone who has left school.
+            'student_year_level'      => $request->getPost('is_student')
+                ? ($request->getPost('student_year_level') ?: null)
+                : null,
             'organizational_unit_id'  => $request->getPost('organizational_unit_id') ?: null,
+            'company_unit_id'         => $request->getPost('company_unit_id') ?: null,
             'contact_number'          => $request->getPost('contact_number') ?: null,
             'email'                   => $request->getPost('email') ?: null,
             'address'                 => $request->getPost('address') ?: null,

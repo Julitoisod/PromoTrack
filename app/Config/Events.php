@@ -23,6 +23,21 @@ use CodeIgniter\HotReloader\HotReloader;
  *      Events::on('create', [$myInstance, 'myMethod']);
  */
 
+/*
+ * Shield fires `register` once the new account exists and has joined the
+ * default group (`reservist`). Listening here rather than overriding
+ * RegisterController::registerAction() means none of Shield's own
+ * registration guards get copied just to run one follow-up step.
+ *
+ * The sign-up form's reservist-only fields (names, company, schooling)
+ * are validated by Auth\RegisterController but are not `users` columns,
+ * so UserModel's $allowedFields drops them from the account insert --
+ * this listener is what actually records them.
+ */
+Events::on('register', static function ($user): void {
+    service('reservistRegistrationService')->linkAccount($user, service('request')->getPost());
+});
+
 Events::on('pre_system', static function (): void {
     if (ENVIRONMENT !== 'testing') {
         $value = ini_get('zlib.output_compression');

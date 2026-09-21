@@ -10,6 +10,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Filters as FiltersConfig;
+use RuntimeException;
 
 /**
  * The IDOR / privilege-escalation suite the design's security checklist (§12)
@@ -37,6 +38,7 @@ final class AccessControlTest extends CIUnitTestCase
     private int $otherUnitId;
     private int $ownReservistId;
     private int $otherReservistId;
+    private ?int $requirementId = null;
 
     /** @var array<string, User> group name => user */
     private array $users = [];
@@ -248,6 +250,14 @@ final class AccessControlTest extends CIUnitTestCase
             'cdc -> settings'             => ['cdc_administrator', '/admin/settings'],
             'rcdg -> promotion rules'     => ['rcdg_reviewer', '/admin/rules'],
             'records -> audit logs'       => ['records_officer', '/admin/audit-logs'],
+
+            // A reservist holds `promotions.view_own` and nothing else: the
+            // whole-roster listing, the staff package queue, and every
+            // administration screen are all closed to them.
+            'reservist -> roster'         => ['reservist', '/reservists'],
+            'reservist -> packages'       => ['reservist', '/packages'],
+            'reservist -> reference data' => ['reservist', '/admin/reference'],
+            'reservist -> audit logs'     => ['reservist', '/admin/audit-logs'],
         ];
     }
 
@@ -283,7 +293,181 @@ final class AccessControlTest extends CIUnitTestCase
             'clerk cannot edit reference data'   => ['unit_s1_clerk', '/admin/reference/units'],
             'clerk cannot version a rule'        => ['unit_s1_clerk', '/admin/rules/1/versions'],
             'clerk cannot take a backup'         => ['unit_s1_clerk', '/admin/backups'],
+
+            // The reservist uploads; somebody else verifies. Holding
+            // `documents.upload` must not carry the review decisions with it.
+            'reservist cannot create reservists' => ['reservist', '/reservists'],
+            'reservist cannot verify a document' => ['reservist', '/package-documents/1/verify'],
+            'reservist cannot reject a document' => ['reservist', '/package-documents/1/reject'],
+            'reservist cannot waive a document'  => ['reservist', '/package-documents/1/waive'],
+            'reservist cannot submit to the CDC' => ['reservist', '/packages/1/submit'],
         ];
+    }
+
+    // ------------------------------------------------------------- reservist
+
+    public function testReservistReachesTheirOwnPromotionPageAndChecklist(): void
+    {
+        $user = $this->userIn('reservist');
+        $this->linkReservistAccount($user, $this->ownReservistId);
+
+        $this->seedPackageWithChecklist($this->ownReservistId, $this->ownUnitId);
+
+        $result = $this->get('/my/promotion');
+
+        $result->assertOK();
+        // Their own checklist, not an empty page: item A of the A-M list.
+        $result->assertSee('Recommendation for Promotion from Group Commander');
+    }
+
+    public function testReservistWithoutALinkedRecordIsToldSoRatherThanShownNothing(): void
+    {
+        $this->actingAs($this->userIn('reservist'));
+
+        $result = $this->get('/my/promotion');
+
+        $result->assertOK();
+        $result->assertSee('not linked to a reservist record');
+    }
+
+    public function testReservistCannotUploadIntoAnotherReservistsPackage(): void
+    {
+        $user = $this->userIn('reservist');
+        $this->linkReservistAccount($user, $this->ownReservistId);
+
+        // The victim's package lives in the same unit, so a unit check alone
+        // would have let this through -- ownership is what must stop it.
+        $documentId = $this->seedPackageWithChecklist($this->otherReservistId, $this->ownUnitId);
+
+        $this->expectException(RuntimeException::class);
+
+        $this->post('/package-documents/' . $documentId . '/upload');
+    }
+
+    public function testReservistCanDownloadTheDocumentOnTheirOwnPackage(): void
+    {
+        $user = $this->userIn('reservist');
+        $this->linkReservistAccount($user, $this->ownReservistId);
+
+        $documentId = $this->seedPackageWithChecklist($this->ownReservistId, $this->ownUnitId);
+        $path       = WRITEPATH . 'uploads/ac-own-document.pdf';
+
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0775, true);
+        }
+
+        file_put_contents($path, 'own document');
+
+        try {
+            $versionId = $this->seedDocumentVersion($documentId, (int) $user->id, $path);
+
+            // assertStatus, not assertOK: a DownloadResponse streams the file
+            // rather than filling the body assertOK() also insists on.
+            $this->get('/package-documents/versions/' . $versionId . '/download')->assertStatus(200);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    public function testReservistCannotDownloadAnotherReservistsDocument(): void
+    {
+        $user = $this->userIn('reservist');
+        $this->linkReservistAccount($user, $this->ownReservistId);
+
+        $documentId = $this->seedPackageWithChecklist($this->otherReservistId, $this->ownUnitId);
+        $versionId  = $this->insertRow('document_versions', [
+            'package_document_id' => $documentId,
+            'version_number'      => 1,
+            'stored_filename'     => 'secret.pdf',
+            'original_filename'   => 'secret.pdf',
+            'mime_type'           => 'application/pdf',
+            'file_size_bytes'     => 10,
+            'sha256_checksum'     => str_repeat('a', 64),
+            'storage_path'        => WRITEPATH . 'uploads/secret.pdf',
+            'uploaded_by'         => $user->id,
+        ]);
+
+        $this->expectException(RuntimeException::class);
+
+        $this->get('/package-documents/versions/' . $versionId . '/download');
+    }
+
+    private function seedDocumentVersion(int $packageDocumentId, int $userId, string $storagePath): int
+    {
+        return $this->insertRow('document_versions', [
+            'package_document_id' => $packageDocumentId,
+            'version_number'      => 1,
+            'stored_filename'     => basename($storagePath),
+            'original_filename'   => basename($storagePath),
+            'mime_type'           => 'application/pdf',
+            'file_size_bytes'     => 12,
+            'sha256_checksum'     => str_repeat('b', 64),
+            'storage_path'        => $storagePath,
+            'uploaded_by'         => $userId,
+        ]);
+    }
+
+    /**
+     * Points a reservist account at the record it owns, the way
+     * ReservistRegistrationService does at sign-up.
+     */
+    private function linkReservistAccount(User $user, int $reservistId): void
+    {
+        $this->db->table('reservists')
+            ->where('id', $reservistId)
+            ->update(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+    }
+
+    /**
+     * Creates a draft package for $reservistId with one checklist item,
+     * and returns that `package_documents` row's id.
+     */
+    private function seedPackageWithChecklist(int $reservistId, int $unitId): int
+    {
+        $packageId = $this->insertRow('promotion_packages', [
+            'reservist_id'           => $reservistId,
+            'organizational_unit_id' => $unitId,
+            'package_number'         => 'PKG-AC-' . $reservistId,
+            'status'                 => 'draft',
+            'current_routing_level'  => 'CDC',
+            'open_marker'            => 1,
+        ]);
+
+        return $this->insertRow('package_documents', [
+            'promotion_package_id'    => $packageId,
+            'document_requirement_id' => $this->checklistRequirementId(),
+            'status'                  => 'pending',
+        ]);
+    }
+
+    /**
+     * Item A of the A-M checklist, created once for the suite rather
+     * than taken from DocumentRequirementsSeeder -- these cases are
+     * about authorization, and should not start failing because the
+     * seeder's wording changed.
+     */
+    private function checklistRequirementId(): int
+    {
+        if ($this->requirementId !== null) {
+            return $this->requirementId;
+        }
+
+        $templateId = $this->insertRow('document_requirement_templates', [
+            'template_name' => 'Access Control Test Template',
+            'version'       => 1,
+            'is_active'     => 1,
+        ]);
+
+        return $this->requirementId = $this->insertRow('document_requirements', [
+            'document_requirement_template_id' => $templateId,
+            'document_code'                    => 'A',
+            'document_label'                   => 'Recommendation for Promotion from Group Commander',
+            'is_conditional'                   => 0,
+            'allows_commander_override'        => 0,
+            'display_order'                    => 1,
+        ]);
     }
 
     public function testSuperadminReachesTheAdministrationScreens(): void

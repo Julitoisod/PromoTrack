@@ -6,6 +6,7 @@ use App\Models\PackageStatusHistoryModel;
 use App\Models\PromotionAssessmentModel;
 use App\Models\PromotionOrderModel;
 use App\Models\PromotionPackageModel;
+use CodeIgniter\HTTP\RedirectResponse;
 
 /**
  * The role-scoped landing dashboard (design doc's Dashboard &
@@ -15,8 +16,18 @@ use App\Models\PromotionPackageModel;
  */
 class Home extends BaseController
 {
-    public function index(): string
+    /**
+     * @return RedirectResponse|string
+     */
+    public function index()
     {
+        // A reservist has no business on the command dashboard -- its
+        // tiles count every package in the organization. Their landing
+        // page is their own record.
+        if ($this->isReservistAccount()) {
+            return redirect()->to(site_url('my/promotion'));
+        }
+
         $user = $this->currentUser();
 
         $unitScopedId = $user !== null && $user->inGroup('unit_s1_clerk')

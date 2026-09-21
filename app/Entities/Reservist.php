@@ -32,9 +32,12 @@ class Reservist extends Entity
 
     protected $casts = [
         'id'                      => 'integer',
+        'user_id'                 => '?integer',
         'current_rank_id'         => '?integer',
         'education_track_id'      => '?integer',
         'organizational_unit_id'  => '?integer',
+        'company_unit_id'         => '?integer',
+        'is_student'              => 'boolean',
         'created_by'              => '?integer',
     ];
 
@@ -111,5 +114,19 @@ class Reservist extends Entity
     public function isActive(): bool
     {
         return ($this->attributes['status'] ?? null) === 'active';
+    }
+
+    /**
+     * "3rd Year" when the reservist is still studying, "Not a student"
+     * when they are not -- the schooling answer collected at sign-up,
+     * rendered for display.
+     */
+    public function getSchoolingLabel(): string
+    {
+        if (empty($this->attributes['is_student'])) {
+            return 'Not a student';
+        }
+
+        return (string) ($this->attributes['student_year_level'] ?? 'Student');
     }
 }

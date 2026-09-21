@@ -36,6 +36,15 @@ with no server-side error, and the intranet deployment has no outbound internet.
 `public/assets/vendor/` instead. Inline `<script>` needs `{csp-script-nonce}`; inline `style="…"`
 attributes cannot be nonced, so put them in `public/assets/css/app.css`.
 
+**Never authorize a reservist's own account with `belongsToUserUnit()`.** A reservist is scoped to
+their own record, not to a unit — "same unit" would hand them every colleague's package. That method
+returns `false` for the `reservist` group on purpose, so anything not yet updated fails closed; the
+reservist surfaces authorize through `BaseController::canAccessPackageRow()` instead.
+
+**Never let self-registration create a staff account.** `AuthGroups::$defaultGroup` is `reservist`.
+It used to be `unit_s1_clerk`, which gave anyone who signed up `reservists.create`/`reservists.update`
+over a whole unit. `ReservistRegistrationTest` asserts this directly — keep it that way.
+
 **Never trust `getClientMimeType()` / `getClientExtension()` on an upload.** `FileStorageService`
 detects the type with `finfo` and refuses on failed detection. Note that libmagic on this XAMPP build
 returns `false` for a file whose contents start with `<?php` — that must stay a refusal, not a 500.
@@ -57,6 +66,14 @@ Do not hard-code one in a service or a validation rule.
   `BaseController::$helpers`). No PhpSpreadsheet unless real `.xlsx` formatting is required.
 - **Settings** use the already-installed `codeigniter4/settings` package (`setting('App.foo')`), not a
   bespoke settings model. Only add a setting something actually reads.
+- **A company is an organizational unit**, not a table of its own: `organizational_units` rows with
+  `unit_type = 'company'` parented to the reserve unit, picked into `reservists.company_unit_id`.
+  Reference Data already maintains them, each unit keeps its own set, and
+  `UnitModel::activeUnits()` excludes them so a company can never be filed as somebody's whole unit.
+- **A reservist's promotion standing is derived, never stored** — it is the `promotion_status` of
+  their most recent `promotion_assessments` row, read by a correlated subquery in
+  `ReservistModel::listQuery()`. No assessment yet renders as "Pending"; see
+  `Views/components/promotion_status.php`, which is the only place the four badges are defined.
 - **404 vs 403 on record access**: a record that exists but is not the caller's answers 404, so the
   response cannot be used to probe for ids. Unit-level refusals answer 403 from `UnitAccessFilter`.
 
@@ -75,5 +92,19 @@ Do not hard-code one in a service or a validation rule.
 
 ## Not built yet
 
-User management (`users.manage`) is still a disabled placeholder in the sidebar — accounts are created
-by seeder or by SQL. Everything else in the design document's module table is implemented.
+User management (`users.manage`) is still a disabled placeholder in the sidebar — staff accounts are
+created by seeder or by SQL (reservists create their own by signing up). Everything else in the design
+document's module table is implemented.
+
+`Admin\ReferenceDataController::SETS['units']` does not expose `parent_unit_id`, so a company added
+through Reference Data has no parent unit and shows without its "— Sample Reserve Unit A" suffix in
+the picker. It is otherwise fully functional. Seeded companies get their parent from
+`CompanyUnitsSeeder`.
+
+## Open question for the client
+
+`PromotionRuleVersionsSeeder` encodes Table 3 of the thesis: minimum time in grade in **years**
+(PFC→CPL 2, CPL→SGT 4, SGT→SSG 7 …). The stated requirement "every semester ma promote" implies a
+6-month cycle, which contradicts Table 3. Nothing was overwritten — changing a threshold means adding
+a new rule version via `Admin\PromotionRulesController::storeVersion`, never editing the seeded one.
+Confirm which is authoritative before relying on the eligible/overdue verdicts.

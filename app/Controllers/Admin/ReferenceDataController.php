@@ -44,7 +44,7 @@ class ReferenceDataController extends BaseController
             'columns'  => [
                 'unit_code' => ['label' => 'Unit code', 'type' => 'text', 'required' => true],
                 'unit_name' => ['label' => 'Unit name', 'type' => 'text', 'required' => true],
-                'unit_type' => ['label' => 'Type', 'type' => 'text', 'help' => 'e.g. RCDG, CDC, battalion'],
+                'unit_type' => ['label' => 'Type', 'type' => 'text', 'help' => 'e.g. RCDG, CDC, battalion. Use "company" for Alpha/Bravo/Charlie — those appear in the reservist company picker rather than the unit picker.'],
             ],
         ],
         'ranks' => [

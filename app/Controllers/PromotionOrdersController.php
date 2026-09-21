@@ -121,6 +121,8 @@ class PromotionOrdersController extends BaseController
             'created_by'      => $actorUserId ?: null,
         ]);
 
+        $this->reassessAgainstNewRank((int) $package['reservist_id'], $newRankId, $actorUserId);
+
         $result = service('packageWorkflowService')->transition($packageId, 'closed', $actorUserId);
 
         $db->transComplete();
@@ -136,5 +138,34 @@ class PromotionOrdersController extends BaseController
 
         return redirect()->to(site_url('packages/' . $packageId))
             ->with('success', 'Promotion order recorded; package is now "' . ucwords(str_replace('_', ' ', $result['status'])) . '".');
+    }
+
+    /**
+     * Re-runs the eligibility assessment against the rank the reservist
+     * has just been promoted INTO, so their standing reflects the
+     * promotion immediately.
+     *
+     * Without this the newest assessment on file stays the one that
+     * justified this package -- "overdue" -- and a reservist promoted
+     * this morning still shows Overdue on the roster, in the promotion
+     * backlog report, and in the dashboard's Overdue tile, until someone
+     * happens to press Assess on them again. The rank change is the
+     * event that invalidates the old verdict, so the recompute belongs
+     * here, in the same transaction that performs it.
+     *
+     * Silent when the new rank has no onward promotion rule (the top of
+     * a track): no assessment is written, and the reservist correctly
+     * reads as Pending rather than as eligible for a rank that does not
+     * exist.
+     */
+    private function reassessAgainstNewRank(int $reservistId, int $newRankId, int $actorUserId): void
+    {
+        $nextRule = (new PromotionRuleModel())->findActiveRuleForFromRank($newRankId);
+
+        if ($nextRule === null) {
+            return;
+        }
+
+        service('eligibilityService')->assessAndSave($reservistId, (int) $nextRule['to_rank_id'], $actorUserId);
     }
 }

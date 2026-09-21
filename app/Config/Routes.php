@@ -12,6 +12,14 @@ service('auth')->routes($routes, ['except' => ['register']]);
 $routes->get('register', 'Auth\RegisterController::registerView', ['as' => 'register']);
 $routes->post('register', 'Auth\RegisterController::registerAction');
 
+// The reservist's own surface. No record id in the URL: the record is
+// always the one the session's account owns, so there is nothing here to
+// tamper with. Uploads post to the shared package-documents routes, which
+// re-check ownership via BaseController::canAccessPackageRow().
+$routes->get('my/promotion', 'MyPromotionController::index', [
+    'filter' => ['session', 'permission:promotions.view_own'],
+]);
+
 $routes->group('reservists', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('/', 'ReservistsController::index', ['filter' => 'permission:reservists.view']);
     $routes->get('create', 'ReservistsController::create', ['filter' => 'permission:reservists.create']);
@@ -69,7 +77,12 @@ $routes->group('package-documents', ['filter' => 'session'], static function (Ro
     $routes->post('(:num)/verify', 'PackageDocumentsController::verify/$1', ['filter' => 'permission:documents.verify']);
     $routes->post('(:num)/reject', 'PackageDocumentsController::reject/$1', ['filter' => 'permission:documents.reject']);
     $routes->post('(:num)/waive', 'PackageDocumentsController::waive/$1', ['filter' => 'permission:waivers.approve']);
-    $routes->get('versions/(:num)/download', 'PackageDocumentsController::download/$1', ['filter' => 'permission:reservists.view']);
+    // Two permissions, OR-ed by Shield's filter: staff reach any document in
+    // their unit, a reservist reaches the ones on their own package. Which of
+    // the two applies is decided per record by canAccessPackageRow(), not
+    // here -- gating this on `reservists.view` alone locked reservists out of
+    // the very files they had just uploaded.
+    $routes->get('versions/(:num)/download', 'PackageDocumentsController::download/$1', ['filter' => 'permission:reservists.view,promotions.view_own']);
 });
 
 $routes->group('cdc', ['filter' => 'session'], static function (RouteCollection $routes): void {

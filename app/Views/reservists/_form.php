@@ -4,7 +4,8 @@
  *
  * Expected variables:
  *   $reservist        Reservist entity when editing, or null when creating.
- *   $units            array of organizational_units rows.
+ *   $units            array of organizational_units rows (companies excluded).
+ *   $companies        array of organizational_units rows of unit_type 'company'.
  *   $ranks            array of ranks rows.
  *   $educationTracks  array of education_tracks rows.
  *   $restrictedUnitId int|null - forces/locks the unit dropdown for unit-scoped users.
@@ -124,6 +125,42 @@ $field = static function (string $name, $default = '') use ($reservist) {
             <?php endforeach; ?>
         </select>
         <?= view('components/form_errors', ['field' => 'education_track_id']) ?>
+    </div>
+
+    <div class="col-md-4">
+        <label for="is_student" class="form-label">Still a Student?</label>
+        <select class="form-select" id="is_student" name="is_student">
+            <option value="0" <?= (string) $field('is_student', '0') !== '1' ? 'selected' : '' ?>>No — no longer a student</option>
+            <option value="1" <?= (string) $field('is_student', '0') === '1' ? 'selected' : '' ?>>Yes — still studying</option>
+        </select>
+        <?= view('components/form_errors', ['field' => 'is_student']) ?>
+    </div>
+    <div class="col-md-4">
+        <label for="student_year_level" class="form-label">Year Level</label>
+        <select class="form-select" id="student_year_level" name="student_year_level">
+            <option value="">-- Not applicable --</option>
+            <?php foreach (App\Models\ReservistModel::STUDENT_YEAR_LEVELS as $yearLevel): ?>
+                <option value="<?= esc($yearLevel) ?>" <?= (string) $field('student_year_level') === $yearLevel ? 'selected' : '' ?>>
+                    <?= esc($yearLevel) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Ignored unless the reservist is still studying.</div>
+        <?= view('components/form_errors', ['field' => 'student_year_level']) ?>
+    </div>
+
+    <div class="col-md-4">
+        <label for="company_unit_id" class="form-label">Company</label>
+        <select class="form-select" id="company_unit_id" name="company_unit_id">
+            <option value="">-- Select --</option>
+            <?php foreach ($companies as $company): ?>
+                <option value="<?= esc((string) $company['id']) ?>" <?= (string) $field('company_unit_id') === (string) $company['id'] ? 'selected' : '' ?>>
+                    <?= esc($company['unit_name']) ?><?= $company['parent_unit_name'] !== null ? ' — ' . esc($company['parent_unit_name']) : '' ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Maintained in Reference Data as units of type <code>company</code>.</div>
+        <?= view('components/form_errors', ['field' => 'company_unit_id']) ?>
     </div>
 
     <div class="col-md-4">

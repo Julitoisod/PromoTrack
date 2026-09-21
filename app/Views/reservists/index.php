@@ -20,12 +20,23 @@
                        placeholder="Name, reservist number, or serial number"
                        value="<?= esc($search) ?>">
             </div>
+            <div class="col-md-3">
+                <label class="form-label" for="promotion_status">Promotion status</label>
+                <select class="form-select form-select-sm" id="promotion_status" name="promotion_status">
+                    <option value="">All reservists</option>
+                    <?php foreach (App\Models\ReservistModel::PROMOTION_STATUSES as $statusOption): ?>
+                        <option value="<?= esc($statusOption) ?>" <?= $promotionStatus === $statusOption ? 'selected' : '' ?>>
+                            <?= esc(ucwords(str_replace('_', ' ', $statusOption))) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div class="col-md-2 d-grid">
                 <button type="submit" class="btn btn-sm btn-primary">
                     <i class="bi bi-search me-1"></i> Search
                 </button>
             </div>
-            <?php if ($search !== ''): ?>
+            <?php if ($search !== '' || $promotionStatus !== null): ?>
                 <div class="col-md-2 d-grid">
                     <a class="btn btn-sm btn-outline-secondary" href="<?= esc(site_url('reservists')) ?>">Clear</a>
                 </div>
@@ -48,6 +59,8 @@
                             <th scope="col">Name</th>
                             <th scope="col">Rank</th>
                             <th scope="col">Unit</th>
+                            <th scope="col">Company</th>
+                            <th scope="col">Promotion</th>
                             <th scope="col">Status</th>
                             <th class="text-end" scope="col">Actions</th>
                         </tr>
@@ -68,6 +81,8 @@
                                 <td><?= esc($reservist->getFullName()) ?></td>
                                 <td><?= esc($reservist->rank_name ?? '—') ?></td>
                                 <td><?= esc($reservist->unit_name ?? '—') ?></td>
+                                <td><?= esc($reservist->company_name ?? '—') ?></td>
+                                <td><?= view('components/promotion_status', ['status' => $reservist->promotion_status ?? null]) ?></td>
                                 <td><span class="badge text-bg-<?= esc($statusBadge) ?>"><?= esc(ucfirst($reservist->status ?? 'active')) ?></span></td>
                                 <td class="text-end">
                                     <a href="<?= esc(site_url('reservists/' . $reservist->id)) ?>" class="btn btn-sm btn-outline-secondary" title="View">
