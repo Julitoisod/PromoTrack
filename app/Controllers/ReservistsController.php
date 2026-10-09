@@ -115,10 +115,11 @@ class ReservistsController extends BaseController
                 ->with('error', 'The reservist profile could not be created. Please review the errors below.');
         }
 
-        $status = $this->refreshAssessment((int) $this->reservistModel->getInsertID());
+        $assessment = $this->refreshAssessment((int) $this->reservistModel->getInsertID());
 
         return redirect()->to(site_url('reservists'))
-            ->with('success', 'Reservist profile created successfully. ' . $this->assessmentNotice($status));
+            ->with('success', 'Reservist profile created successfully. '
+                . $this->assessmentNotice($assessment['status'], $assessment['reasons']));
     }
 
     /**
@@ -204,7 +205,8 @@ class ReservistsController extends BaseController
         $notice = '';
 
         if ($affectsEligibility) {
-            $notice = ' ' . $this->assessmentNotice($this->refreshAssessment($reservist->id));
+            $assessment = $this->refreshAssessment($reservist->id);
+            $notice     = ' ' . $this->assessmentNotice($assessment['status'], $assessment['reasons']);
         }
 
         return redirect()->to(site_url('reservists/' . $reservist->id))
@@ -238,22 +240,27 @@ class ReservistsController extends BaseController
      * encoded, instead of sitting at Pending until somebody remembers to
      * press Assess.
      *
-     * Returns the resulting promotion status, or null when the reservist
-     * has no rank or their rank has no configured promotion rule -- both
-     * of which leave them legitimately Pending.
+     * Returns the resulting promotion status plus whatever stopped it
+     * being decided, so the caller can tell the user *why* a reservist
+     * came out Pending instead of leaving them to guess.
+     *
+     * @return array{status: string|null, reasons: list<string>}
      */
-    private function refreshAssessment(int $reservistId): ?string
+    private function refreshAssessment(int $reservistId): array
     {
         $reservist = $this->reservistModel->find($reservistId);
 
         if ($reservist === null || $reservist->current_rank_id === null) {
-            return null;
+            return ['status' => null, 'reasons' => []];
         }
 
         $rule = $this->promotionRuleModel->findActiveRuleForFromRank((int) $reservist->current_rank_id);
 
         if ($rule === null) {
-            return null;
+            return [
+                'status'  => null,
+                'reasons' => ['No active promotion rule is configured for this reservist\'s current rank'],
+            ];
         }
 
         $user = $this->currentUser();
@@ -264,16 +271,32 @@ class ReservistsController extends BaseController
             $user !== null ? (int) $user->id : 0
         );
 
-        return $result['promotion_status'];
+        return [
+            'status'  => $result['promotion_status'],
+            'reasons' => $result['blocking_reasons'],
+        ];
     }
 
-    private function assessmentNotice(?string $promotionStatus): string
+    /**
+     * $blockingReasons is only consulted for the Pending case. "Pending"
+     * used to be reported as "no rank, or no promotion rule configured
+     * for their rank", which was a guess and was usually wrong -- the
+     * common cause is an education track with no rule version of its
+     * own. Saying which of them actually happened is the difference
+     * between a fixable message and a dead end.
+     *
+     * @param list<string> $blockingReasons
+     */
+    private function assessmentNotice(?string $promotionStatus, array $blockingReasons = []): string
     {
         return match ($promotionStatus) {
             'overdue'          => 'Eligibility assessed: OVERDUE for promotion.',
             'eligible'         => 'Eligibility assessed: ELIGIBLE for promotion.',
             'not_yet_eligible' => 'Eligibility assessed: not yet eligible.',
-            default            => 'Eligibility is pending: no rank, or no promotion rule configured for their rank.',
+            default            => 'Eligibility is pending — '
+                . ($blockingReasons === []
+                    ? 'this reservist has no rank on file, so there is nothing to assess against.'
+                    : lcfirst(rtrim($blockingReasons[0], '.')) . '.'),
         };
     }
 

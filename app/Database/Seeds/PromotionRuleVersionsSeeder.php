@@ -97,6 +97,55 @@ class PromotionRuleVersionsSeeder extends Seeder
                     'updated_at'                      => $now,
                 ]);
             }
+
+            $this->seedTrackAgnosticBaseline((int) $rule['rule_id'], $yearsByTrack[0] * 12, $now);
         }
+    }
+
+    /**
+     * Inserts the track-agnostic baseline version for $ruleId: the row
+     * `PromotionRuleVersionModel::resolveEffectiveVersion()` falls back
+     * to when a reservist's education track has no version of its own.
+     *
+     * Without it that fallback finds nothing, `evaluate()` reports "no
+     * promotion rule version is effective", and the reservist sits at
+     * "Pending" forever with nothing on screen explaining why. Table 3
+     * covers only three of the nine seeded education tracks, so the
+     * other six -- and every reservist with no track recorded at all --
+     * fell straight into that hole.
+     *
+     * The baseline reuses the GENERAL (High School Graduate) figure
+     * rather than inventing one. It is the longest of the three, so an
+     * unmapped track is never assessed more leniently than the published
+     * matrix allows. It still REQUIRES OFFICIAL AFP/PHILIPPINE ARMY
+     * VALIDATION, exactly like every other threshold in this seeder.
+     */
+    private function seedTrackAgnosticBaseline(int $ruleId, int $months, string $now): void
+    {
+        $exists = $this->db->table('promotion_rule_versions')
+            ->where('promotion_rule_id', $ruleId)
+            ->where('education_track_id', null)
+            ->get()
+            ->getFirstRow('array');
+
+        if ($exists !== null) {
+            return;
+        }
+
+        $this->db->table('promotion_rule_versions')->insert([
+            'promotion_rule_id'              => $ruleId,
+            'education_track_id'             => null,
+            'version_number'                 => 1,
+            'minimum_time_in_grade_months'   => $months,
+            'requires_mles'                  => 0,
+            'requires_physical_fitness_test' => 0,
+            'additional_prerequisites'       => null,
+            'effective_date'                 => '2026-01-01',
+            'expiry_date'                    => null,
+            'is_active'                      => 1,
+            'notes'                          => 'Default for any education track without its own Table 3 row -- REQUIRES OFFICIAL AFP/PHILIPPINE ARMY VALIDATION.',
+            'created_at'                     => $now,
+            'updated_at'                     => $now,
+        ]);
     }
 }
