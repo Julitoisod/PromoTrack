@@ -148,7 +148,11 @@ class Services extends BaseService
             return static::getSharedInstance('reservistRegistrationService');
         }
 
-        return new ReservistRegistrationService(new ReservistModel(), new UserModel());
+        return new ReservistRegistrationService(
+            new ReservistModel(),
+            new PromotionRuleModel(),
+            new UserModel(),
+        );
     }
 
     public static function reportService(bool $getShared = true): ReportService

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Entities\Reservist;
+use App\Models\PromotionRuleModel;
 use App\Models\ReservistModel;
 use App\Models\UserModel;
 use CodeIgniter\Shield\Entities\User;
@@ -29,6 +30,7 @@ class ReservistRegistrationService
 {
     public function __construct(
         private readonly ReservistModel $reservistModel,
+        private readonly PromotionRuleModel $promotionRuleModel,
         private readonly UserModel $userModel,
     ) {
     }
@@ -69,6 +71,12 @@ class ReservistRegistrationService
 
         $companyUnitId = ! empty($profile['company_unit_id']) ? (int) $profile['company_unit_id'] : null;
 
+        $service = [
+            'current_rank_id'        => ! empty($profile['current_rank_id']) ? (int) $profile['current_rank_id'] : null,
+            'date_of_enlistment'     => ! empty($profile['date_of_enlistment']) ? $profile['date_of_enlistment'] : null,
+            'date_of_last_promotion' => ! empty($profile['date_of_last_promotion']) ? $profile['date_of_last_promotion'] : null,
+        ];
+
         $existing = $serial !== '' ? $this->reservistModel->findByAfpSerialNumber($serial) : null;
 
         if ($existing !== null && $existing->user_id !== null && $existing->user_id !== (int) $user->id) {
@@ -82,16 +90,23 @@ class ReservistRegistrationService
             // they recorded and fill in only what sign-up is authoritative
             // for -- the account link and the two answers only the
             // reservist can give.
+            // Whatever the clerk already recorded wins: their rank and dates
+            // come from service records, the reservist's come from memory.
             $this->reservistModel->update($existing->id, array_merge($schooling, [
-                'id'              => $existing->id,
-                'user_id'         => (int) $user->id,
-                'company_unit_id' => $companyUnitId ?? $existing->company_unit_id,
+                'id'                     => $existing->id,
+                'user_id'                => (int) $user->id,
+                'company_unit_id'        => $companyUnitId ?? $existing->company_unit_id,
+                'current_rank_id'        => $existing->current_rank_id ?? $service['current_rank_id'],
+                'date_of_enlistment'     => $existing->date_of_enlistment?->toDateString() ?? $service['date_of_enlistment'],
+                'date_of_last_promotion' => $existing->date_of_last_promotion?->toDateString() ?? $service['date_of_last_promotion'],
             ]));
+
+            $this->assess($existing->id, (int) $user->id);
 
             return $this->reservistModel->find($existing->id);
         }
 
-        $this->reservistModel->insert(array_merge($names, $schooling, [
+        $this->reservistModel->insert(array_merge($names, $schooling, $service, [
             'user_id'                => (int) $user->id,
             'reservist_number'       => $this->nextReservistNumber($serial),
             'afp_serial_number'      => $serial !== '' ? $serial : null,
@@ -101,7 +116,36 @@ class ReservistRegistrationService
             'status'                 => 'active',
         ]));
 
-        return $this->reservistModel->find($this->reservistModel->getInsertID());
+        $reservistId = (int) $this->reservistModel->getInsertID();
+
+        $this->assess($reservistId, (int) $user->id);
+
+        return $this->reservistModel->find($reservistId);
+    }
+
+    /**
+     * Runs the eligibility assessment straight after sign-up, so a
+     * reservist sees their real standing rather than "Pending" on the
+     * very first page they land on.
+     *
+     * Silent when there is no rank or no rule for it -- Pending is then
+     * the honest answer, and `MyPromotionController` explains it.
+     */
+    private function assess(int $reservistId, int $actorUserId): void
+    {
+        $reservist = $this->reservistModel->find($reservistId);
+
+        if ($reservist === null || $reservist->current_rank_id === null) {
+            return;
+        }
+
+        $rule = $this->promotionRuleModel->findActiveRuleForFromRank((int) $reservist->current_rank_id);
+
+        if ($rule === null) {
+            return;
+        }
+
+        service('eligibilityService')->assessAndSave($reservistId, (int) $rule['to_rank_id'], $actorUserId);
     }
 
     /**

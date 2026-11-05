@@ -30,6 +30,7 @@ final class ReservistRegistrationTest extends CIUnitTestCase
 
     private int $unitId;
     private int $companyId;
+    private int $rankId;
 
     protected function setUp(): void
     {
@@ -55,6 +56,13 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'unit_name'      => 'Alpha Company',
             'unit_type'      => 'company',
             'is_active'      => 1,
+        ]);
+
+        $this->rankId = $this->insertRow('ranks', [
+            'rank_code'  => 'REG-R1',
+            'rank_name'  => 'Registration Test Rank',
+            'sort_order' => 1,
+            'is_active'  => 1,
         ]);
     }
 
@@ -85,6 +93,9 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'afp_serial_number'      => 'REG-123456',
             'organizational_unit_id' => $this->unitId,
             'company_unit_id'        => $this->companyId,
+            'current_rank_id'        => $this->rankId,
+            'date_of_enlistment'     => '2015-01-01',
+            'date_of_last_promotion' => '2024-01-01',
             'is_student'             => '1',
             'student_year_level'     => '3rd Year',
             'email'                  => 'juan@promotrack.local',
@@ -176,6 +187,68 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'is_student'         => 0,
             'student_year_level' => null,
         ]);
+    }
+
+    /**
+     * The point of collecting rank and an anchor date at sign-up: the
+     * reservist lands on a real standing instead of "Pending". Before
+     * this, every self-registered reservist read Pending forever,
+     * because there was no rank to resolve a rule with and no date to
+     * measure time in grade against.
+     */
+    public function testSignUpProducesARealStandingRatherThanPending(): void
+    {
+        $toRankId = $this->insertRow('ranks', [
+            'rank_code'  => 'REG-R2',
+            'rank_name'  => 'Registration Test Rank 2',
+            'sort_order' => 2,
+            'is_active'  => 1,
+        ]);
+
+        $ruleId = $this->insertRow('promotion_rules', [
+            'rule_name'    => 'Registration test rule',
+            'from_rank_id' => $this->rankId,
+            'to_rank_id'   => $toRankId,
+            'is_active'    => 1,
+        ]);
+
+        $this->insertRow('promotion_rule_versions', [
+            'promotion_rule_id'            => $ruleId,
+            'education_track_id'           => null,
+            'version_number'               => 1,
+            'minimum_time_in_grade_months' => 24,
+            'effective_date'               => '2020-01-01',
+            'is_active'                    => 1,
+        ]);
+
+        // Promoted well over the 24-month threshold.
+        $this->signUp(['date_of_last_promotion' => '2020-01-01']);
+
+        $user      = auth()->getProvider()->findByCredentials(['email' => 'juan@promotrack.local']);
+        $reservist = $this->db->table('reservists')->where('user_id', $user->id)->get()->getRowArray();
+
+        $assessment = $this->db->table('promotion_assessments')
+            ->where('reservist_id', $reservist['id'])
+            ->orderBy('id', 'DESC')
+            ->get(1)
+            ->getRowArray();
+
+        $this->assertNotNull($assessment, 'Sign-up left the reservist with no assessment at all.');
+        $this->assertSame(
+            'overdue',
+            $assessment['promotion_status'],
+            'A reservist who signed up well past the threshold still reads as Pending.'
+        );
+    }
+
+    public function testSignUpRequiresARankSoTheStandingCanBeComputed(): void
+    {
+        $this->signUp(['current_rank_id' => '']);
+
+        $this->assertNull(
+            auth()->getProvider()->findByCredentials(['email' => 'juan@promotrack.local']),
+            'An account was created with no rank, which can never produce a standing.'
+        );
     }
 
     public function testSignUpRequiresAUnitAndACompany(): void

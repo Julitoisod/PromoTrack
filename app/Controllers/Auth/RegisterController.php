@@ -59,6 +59,24 @@ class RegisterController extends ShieldRegisterController
                 'label' => 'Company',
                 'rules' => ['required', 'is_natural_no_zero', 'is_not_unique[organizational_units.id]'],
             ],
+            // Rank and an anchor date are what make a promotion standing
+            // computable at all. Without them EligibilityService has no
+            // rule to resolve and no time in grade to measure, and the
+            // reservist sits at "Pending" from the moment they sign up.
+            'current_rank_id' => [
+                'label' => 'Current Rank',
+                'rules' => ['required', 'is_natural_no_zero', 'is_not_unique[ranks.id]'],
+            ],
+            'date_of_enlistment' => [
+                'label' => 'Date of Enlistment',
+                'rules' => ['required', 'valid_date', 'not_future_date'],
+            ],
+            // Blank means never promoted since enlistment, which is a real
+            // answer: time in grade then runs from the enlistment date.
+            'date_of_last_promotion' => [
+                'label' => 'Date of Last Promotion',
+                'rules' => ['permit_empty', 'valid_date', 'not_future_date'],
+            ],
             'is_student' => [
                 'label' => 'Schooling',
                 'rules' => ['required', 'in_list[0,1]'],

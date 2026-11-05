@@ -10,6 +10,7 @@
       $unitModel  = model(App\Models\UnitModel::class);
       $units      = $unitModel->activeUnits();
       $companies  = $unitModel->activeCompanies();
+      $ranks      = model(App\Models\RankModel::class)->activeRanksOrdered();
       $yearLevels = App\Models\ReservistModel::STUDENT_YEAR_LEVELS; ?>
 
 <div class="auth-card">
@@ -86,6 +87,32 @@
                             </option>
                         <?php endforeach ?>
                     </select>
+                </div>
+
+                <div class="auth-field">
+                    <i class="bi bi-chevron-double-up" aria-hidden="true"></i>
+                    <select class="form-select" id="rankInput" name="current_rank_id" aria-label="Current Rank" required>
+                        <option value="">Select your current rank</option>
+                        <?php foreach ($ranks as $rank) : ?>
+                            <option value="<?= esc($rank['id']) ?>" <?= old('current_rank_id') == $rank['id'] ? 'selected' : '' ?>>
+                                <?= esc($rank['rank_name']) ?>
+                            </option>
+                        <?php endforeach ?>
+                    </select>
+                </div>
+
+                <div class="auth-field auth-field-date">
+                    <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                    <label for="enlistmentInput">Date of Enlistment</label>
+                    <input type="date" class="form-control" id="enlistmentInput" name="date_of_enlistment"
+                           value="<?= old('date_of_enlistment') ?>" required>
+                </div>
+
+                <div class="auth-field auth-field-date">
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                    <label for="lastPromotionInput">Date of Last Promotion <span class="text-muted">(leave blank if never promoted)</span></label>
+                    <input type="date" class="form-control" id="lastPromotionInput" name="date_of_last_promotion"
+                           value="<?= old('date_of_last_promotion') ?>">
                 </div>
 
                 <div class="auth-field">
