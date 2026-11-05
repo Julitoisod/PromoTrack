@@ -240,6 +240,15 @@ body.auth-page > main {
     background: #dfe3ea;
 }
 
+/* Sits directly under the password fields: the rules Shield will enforce,
+   stated before they are broken rather than after. */
+.auth-hint {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #7a8494;
+    margin: -0.35rem 0 0.9rem;
+}
+
 .auth-foot {
     text-align: center;
     font-size: 0.82rem;

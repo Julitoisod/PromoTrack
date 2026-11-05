@@ -19,6 +19,9 @@ $routes->post('register', 'Auth\RegisterController::registerAction');
 $routes->get('my/promotion', 'MyPromotionController::index', [
     'filter' => ['session', 'permission:promotions.view_own'],
 ]);
+$routes->post('my/promotion/package', 'MyPromotionController::openPackage', [
+    'filter' => ['session', 'permission:promotions.view_own'],
+]);
 
 $routes->group('reservists', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('/', 'ReservistsController::index', ['filter' => 'permission:reservists.view']);

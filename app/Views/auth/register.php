@@ -139,6 +139,15 @@
                     <button type="button" class="auth-reveal" data-reveal="passwordConfirmInput" aria-controls="passwordConfirmInput">SHOW</button>
                 </div>
 
+                <?php // Shield enforces CompositionValidator, NothingPersonalValidator and
+                      // DictionaryValidator. Without this note a rejected password just
+                      // produces "Passwords cannot contain re-hashed personal information",
+                      // which reads as a system fault rather than as a rule to follow. ?>
+                <p class="auth-hint">
+                    Your password must be at least 8 characters, must not contain your name,
+                    username or email, and must not be a common word.
+                </p>
+
                 <button type="submit" class="auth-submit mt-3">Sign up</button>
 
                 <p class="auth-foot"><?= lang('Auth.haveAccount') ?> <a href="<?= url_to('login') ?>">Sign in</a></p>

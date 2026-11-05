@@ -94,11 +94,18 @@
             <div class="card-body">
                 <div class="empty-state">
                     <i class="bi bi-folder2-open"></i>
-                    <p class="mb-1">You have no open promotion package.</p>
-                    <p class="text-muted mb-0">
-                        Your unit S1 clerk opens the package. Once they do, your thirteen-item
-                        document checklist appears here for you to upload into.
+                    <p class="mb-1">You have no open promotion package yet.</p>
+                    <p class="text-muted">
+                        Start one to get your thirteen-item document checklist (Items A&ndash;M).
+                        You upload the documents; your unit S1 clerk verifies them and submits
+                        the package to the 1502 CDC.
                     </p>
+                    <form method="post" action="<?= esc(site_url('my/promotion/package')) ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-folder-plus me-1"></i> Start my promotion package
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
