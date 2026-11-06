@@ -1,0 +1,9 @@
+{
+  "name": "promotrack-ui-test",
+  "private": true,
+  "description": "Drives the real sign-up and reservist forms in Chrome and checks the Eligible / Not Yet Eligible / Overdue verdicts. Usage: npm install && node ui-test.mjs http://localhost:8080 ./shots",
+  "type": "module",
+  "dependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}

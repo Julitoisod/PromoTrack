@@ -151,3 +151,7 @@ _modules/*
 /results/
 /phpunit.xml
 .claude-deploy.json
+
+# UI test (tests/ui): its node_modules and screenshots
+/tests/ui/node_modules/
+/tests/ui/shots*/
