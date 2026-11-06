@@ -162,7 +162,15 @@ $statusBadge = match ($reservist->status) {
                                     ?>
                                     <tr>
                                         <td><?= esc($assessment['as_of_date']) ?></td>
-                                        <td><?= $assessment['time_in_grade_months'] !== null ? esc((string) $assessment['time_in_grade_months']) . ' mo(s)' : '—' ?></td>
+                                        <?php $timeInGrade = App\Models\PromotionAssessmentModel::timeInGradeCriterion($assessment); ?>
+                                        <td>
+                                            <?= $assessment['time_in_grade_months'] !== null ? esc((string) $assessment['time_in_grade_months']) . ' mo(s)' : '—' ?>
+                                            <?php if (($timeInGrade['remaining_months'] ?? null) !== null): ?>
+                                                <div class="small text-muted"><?= esc((string) $timeInGrade['remaining_months']) ?> mo(s) to go</div>
+                                            <?php elseif (($timeInGrade['overdue_months'] ?? null) !== null): ?>
+                                                <div class="small text-muted"><?= esc((string) $timeInGrade['overdue_months']) ?> mo(s) overdue</div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><span class="badge text-bg-<?= esc($statusBadgeClass) ?>"><?= esc($statusLabel) ?></span></td>
                                         <td><?= ((int) $assessment['requires_manual_review']) === 1 ? 'Yes' : 'No' ?></td>
                                         <td>

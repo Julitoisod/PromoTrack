@@ -31,6 +31,7 @@ final class ReservistRegistrationTest extends CIUnitTestCase
     private int $unitId;
     private int $companyId;
     private int $rankId;
+    private int $trackId;
 
     protected function setUp(): void
     {
@@ -62,6 +63,12 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'rank_code'  => 'REG-R1',
             'rank_name'  => 'Registration Test Rank',
             'sort_order' => 1,
+            'is_active'  => 1,
+        ]);
+
+        $this->trackId = $this->insertRow('education_tracks', [
+            'track_code' => 'REG-ROTC',
+            'track_name' => 'Registration ROTC Professional',
             'is_active'  => 1,
         ]);
     }
@@ -96,6 +103,7 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'current_rank_id'        => $this->rankId,
             'date_of_enlistment'     => '2015-01-01',
             'date_of_last_promotion' => '2024-01-01',
+            'education_track_id'     => $this->trackId,
             'is_student'             => '1',
             'student_year_level'     => '3rd Year',
             'email'                  => 'juan@promotrack.local',
@@ -170,6 +178,8 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             'company_unit_id'    => $this->companyId,
             'is_student'         => 1,
             'student_year_level' => '3rd Year',
+            // The clerk left the track blank, so the reservist's answer fills it.
+            'education_track_id' => $this->trackId,
             // What the clerk recorded is left exactly as it was.
             'reservist_number'       => 'RSV-PREENCODED',
             'date_of_last_promotion' => '2024-01-01',
@@ -239,6 +249,114 @@ final class ReservistRegistrationTest extends CIUnitTestCase
             $assessment['promotion_status'],
             'A reservist who signed up well past the threshold still reads as Pending.'
         );
+    }
+
+    /**
+     * The live report of 2026-11-06: a SGT 48 months in grade signed up,
+     * expected to read as promotable, and read "Not Yet Eligible". Sign-up
+     * collected no education track, so the assessment fell back to the
+     * track-agnostic baseline -- the General figure, 84 months -- instead
+     * of their own track's 36.
+     */
+    public function testTheEducationTrackPicksTheMlesThresholdTheReservistIsAssessedOn(): void
+    {
+        $toRankId = $this->insertRow('ranks', [
+            'rank_code'  => 'REG-R2',
+            'rank_name'  => 'Registration Test Rank 2',
+            'sort_order' => 2,
+            'is_active'  => 1,
+        ]);
+
+        $ruleId = $this->insertRow('promotion_rules', [
+            'rule_name'    => 'Registration test rule',
+            'from_rank_id' => $this->rankId,
+            'to_rank_id'   => $toRankId,
+            'is_active'    => 1,
+        ]);
+
+        // Baseline (General) 84 months; this reservist's own track 36.
+        foreach ([[null, 84], [$this->trackId, 36]] as [$trackId, $months]) {
+            $this->insertRow('promotion_rule_versions', [
+                'promotion_rule_id'            => $ruleId,
+                'education_track_id'           => $trackId,
+                'version_number'               => 1,
+                'minimum_time_in_grade_months' => $months,
+                'effective_date'               => '2020-01-01',
+                'is_active'                    => 1,
+            ]);
+        }
+
+        $this->signUp(['date_of_last_promotion' => date('Y-m-d', strtotime('-48 months'))]);
+
+        $user      = auth()->getProvider()->findByCredentials(['email' => 'juan@promotrack.local']);
+        $reservist = $this->db->table('reservists')->where('user_id', $user->id)->get()->getRowArray();
+
+        $this->assertSame($this->trackId, (int) $reservist['education_track_id']);
+
+        $assessment = $this->db->table('promotion_assessments')
+            ->where('reservist_id', $reservist['id'])
+            ->orderBy('id', 'DESC')
+            ->get(1)
+            ->getRowArray();
+
+        $this->assertSame(
+            'overdue',
+            $assessment['promotion_status'],
+            '48 months against the track\'s 36 is overdue; "not_yet_eligible" means the General 84 was used.'
+        );
+        $this->assertSame(12, \App\Models\PromotionAssessmentModel::timeInGradeCriterion($assessment)['overdue_months']);
+    }
+
+    public function testSignUpRequiresAnEducationTrack(): void
+    {
+        $this->signUp(['education_track_id' => '']);
+
+        $this->assertNull(
+            auth()->getProvider()->findByCredentials(['email' => 'juan@promotrack.local']),
+            'An account was created with no education track, which silently assesses on the longest threshold.'
+        );
+    }
+
+    /**
+     * Only tracks with a Table 3 threshold of their own are offered:
+     * any other track lands on the General baseline, so listing it would
+     * re-open the exact trap the field exists to close.
+     */
+    public function testTheSignUpFormOffersOnlyTracksWithTheirOwnThreshold(): void
+    {
+        $toRankId = $this->insertRow('ranks', [
+            'rank_code'  => 'REG-R2',
+            'rank_name'  => 'Registration Test Rank 2',
+            'sort_order' => 2,
+            'is_active'  => 1,
+        ]);
+
+        $ruleId = $this->insertRow('promotion_rules', [
+            'rule_name'    => 'Registration test rule',
+            'from_rank_id' => $this->rankId,
+            'to_rank_id'   => $toRankId,
+            'is_active'    => 1,
+        ]);
+
+        $this->insertRow('promotion_rule_versions', [
+            'promotion_rule_id'            => $ruleId,
+            'education_track_id'           => $this->trackId,
+            'version_number'               => 1,
+            'minimum_time_in_grade_months' => 36,
+            'effective_date'               => '2020-01-01',
+            'is_active'                    => 1,
+        ]);
+
+        $this->insertRow('education_tracks', [
+            'track_code' => 'REG-GRAD',
+            'track_name' => 'Registration Unmapped Graduate',
+            'is_active'  => 1,
+        ]);
+
+        $page = $this->get('/register');
+
+        $page->assertSee('Registration ROTC Professional');
+        $page->assertDontSee('Registration Unmapped Graduate');
     }
 
     public function testSignUpRequiresARankSoTheStandingCanBeComputed(): void

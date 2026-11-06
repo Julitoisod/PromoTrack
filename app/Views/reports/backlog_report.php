@@ -36,12 +36,7 @@
             <tbody>
                 <?php foreach ($overdue as $row): ?>
                     <?php
-                    $snapshot = json_decode((string) $row['snapshot_json'], true);
-                    $timeInGradeCriterion = array_values(array_filter(
-                        $snapshot['criteria'] ?? [],
-                        static fn (array $c): bool => $c['key'] === 'time_in_grade'
-                    ))[0] ?? null;
-                    $overdueMonths = $timeInGradeCriterion['overdue_months'] ?? null;
+                    $overdueMonths = App\Models\PromotionAssessmentModel::timeInGradeCriterion($row)['overdue_months'] ?? null;
                     ?>
                     <tr>
                         <td><?= esc($row['reservist_number']) ?></td>

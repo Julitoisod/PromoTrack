@@ -11,6 +11,7 @@
       $units      = $unitModel->activeUnits();
       $companies  = $unitModel->activeCompanies();
       $ranks      = model(App\Models\RankModel::class)->activeRanksOrdered();
+      $tracks     = model(App\Models\EducationTrackModel::class)->mlesTracks();
       $yearLevels = App\Models\ReservistModel::STUDENT_YEAR_LEVELS; ?>
 
 <div class="auth-card">
@@ -113,6 +114,18 @@
                     <label for="lastPromotionInput">Date of Last Promotion <span class="text-muted">(leave blank if never promoted)</span></label>
                     <input type="date" class="form-control" id="lastPromotionInput" name="date_of_last_promotion"
                            value="<?= old('date_of_last_promotion') ?>">
+                </div>
+
+                <div class="auth-field">
+                    <i class="bi bi-award-fill" aria-hidden="true"></i>
+                    <select class="form-select" id="trackInput" name="education_track_id" aria-label="Education Track" required>
+                        <option value="">Select your education track</option>
+                        <?php foreach ($tracks as $track) : ?>
+                            <option value="<?= esc($track['id']) ?>" <?= old('education_track_id') == $track['id'] ? 'selected' : '' ?>>
+                                <?= esc($track['track_name']) ?>
+                            </option>
+                        <?php endforeach ?>
+                    </select>
                 </div>
 
                 <div class="auth-field">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Model;
 
 class EducationTrackModel extends Model
@@ -39,5 +40,25 @@ class EducationTrackModel extends Model
     public function activeTracks(): array
     {
         return $this->where('is_active', 1)->orderBy('track_name', 'ASC')->findAll();
+    }
+
+    /**
+     * The tracks the MLES matrix actually distinguishes: those with an
+     * active promotion rule version of their own (General, Completed 1st
+     * Year College, ROTC Professional as seeded). Any other track is
+     * assessed on the track-agnostic baseline, which is the General
+     * figure -- so offering it at sign-up would let a reservist pick
+     * "College Graduate" and silently land on the longest threshold.
+     */
+    public function mlesTracks(): array
+    {
+        return $this->where('is_active', 1)
+            ->whereIn('id', static fn (BaseBuilder $builder) => $builder
+                ->select('education_track_id')
+                ->from('promotion_rule_versions')
+                ->where('is_active', 1)
+                ->where('education_track_id IS NOT NULL'))
+            ->orderBy('id', 'ASC')
+            ->findAll();
     }
 }

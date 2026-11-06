@@ -41,6 +41,9 @@
                         <dt class="col-sm-5">Company</dt>
                         <dd class="col-sm-7"><?= esc($company['unit_name'] ?? '—') ?></dd>
 
+                        <dt class="col-sm-5">Education Track</dt>
+                        <dd class="col-sm-7"><?= esc($track['track_name'] ?? '—') ?></dd>
+
                         <dt class="col-sm-5">Schooling</dt>
                         <dd class="col-sm-7"><?= esc($reservist->getSchoolingLabel()) ?></dd>
 
@@ -68,6 +71,7 @@
                             Keep your documents uploaded so your package is ready when they do.
                         </p>
                     <?php else: ?>
+                        <?php $timeInGrade = App\Models\PromotionAssessmentModel::timeInGradeCriterion($assessment); ?>
                         <dl class="row mb-0">
                             <dt class="col-sm-6">Time in grade</dt>
                             <dd class="col-sm-6">
@@ -75,9 +79,19 @@
                                     ? esc((string) $assessment['time_in_grade_months']) . ' month(s)'
                                     : '—' ?>
                             </dd>
+                            <?php if (($timeInGrade['remaining_months'] ?? null) !== null): ?>
+                                <dt class="col-sm-6">Months to go</dt>
+                                <dd class="col-sm-6"><?= esc((string) $timeInGrade['remaining_months']) ?> month(s)</dd>
+                            <?php elseif (($timeInGrade['overdue_months'] ?? null) !== null): ?>
+                                <dt class="col-sm-6">Overdue by</dt>
+                                <dd class="col-sm-6"><?= esc((string) $timeInGrade['overdue_months']) ?> month(s)</dd>
+                            <?php endif; ?>
                             <dt class="col-sm-6">Assessed as of</dt>
                             <dd class="col-sm-6"><?= esc((string) $assessment['as_of_date']) ?></dd>
                         </dl>
+                        <?php if ($timeInGrade !== null): ?>
+                            <p class="text-muted small mb-0 mt-2"><?= esc($timeInGrade['detail']) ?></p>
+                        <?php endif; ?>
                         <?php if ((int) $assessment['requires_manual_review'] === 1): ?>
                             <p class="text-muted small mb-0 mt-2">
                                 Some criteria could not be checked automatically and are with your unit for review.

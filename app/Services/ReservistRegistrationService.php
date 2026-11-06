@@ -75,6 +75,7 @@ class ReservistRegistrationService
             'current_rank_id'        => ! empty($profile['current_rank_id']) ? (int) $profile['current_rank_id'] : null,
             'date_of_enlistment'     => ! empty($profile['date_of_enlistment']) ? $profile['date_of_enlistment'] : null,
             'date_of_last_promotion' => ! empty($profile['date_of_last_promotion']) ? $profile['date_of_last_promotion'] : null,
+            'education_track_id'     => ! empty($profile['education_track_id']) ? (int) $profile['education_track_id'] : null,
         ];
 
         $existing = $serial !== '' ? $this->reservistModel->findByAfpSerialNumber($serial) : null;
@@ -99,6 +100,7 @@ class ReservistRegistrationService
                 'current_rank_id'        => $existing->current_rank_id ?? $service['current_rank_id'],
                 'date_of_enlistment'     => $existing->date_of_enlistment?->toDateString() ?? $service['date_of_enlistment'],
                 'date_of_last_promotion' => $existing->date_of_last_promotion?->toDateString() ?? $service['date_of_last_promotion'],
+                'education_track_id'     => $existing->education_track_id ?? $service['education_track_id'],
             ]));
 
             $this->assess($existing->id, (int) $user->id);

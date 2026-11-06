@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\EducationTrackModel;
 use App\Models\PackageDocumentModel;
 use App\Models\PromotionAssessmentModel;
 use App\Models\PromotionPackageModel;
@@ -45,6 +46,7 @@ class MyPromotionController extends BaseController
                 'unit'       => null,
                 'company'    => null,
                 'rank'       => null,
+                'track'      => null,
                 'missing'    => [],
             ]);
         }
@@ -75,6 +77,9 @@ class MyPromotionController extends BaseController
                 : null,
             'rank'       => $reservist->current_rank_id !== null
                 ? (new RankModel())->find($reservist->current_rank_id)
+                : null,
+            'track'      => $reservist->education_track_id !== null
+                ? (new EducationTrackModel())->find($reservist->education_track_id)
                 : null,
         ]);
     }

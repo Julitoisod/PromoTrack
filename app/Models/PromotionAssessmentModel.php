@@ -84,6 +84,28 @@ class PromotionAssessmentModel extends Model
     }
 
     /**
+     * The time-in-grade criterion out of $assessment's immutable
+     * snapshot -- the only place its `remaining_months` (Not Yet
+     * Eligible) and `overdue_months` (Overdue) are recorded. Null when
+     * there is no assessment, or no rule version resolved so the
+     * criterion was never evaluated.
+     *
+     * @return array{detail: string, remaining_months: int|null, overdue_months: int|null}|null
+     */
+    public static function timeInGradeCriterion(?array $assessment): ?array
+    {
+        $snapshot = json_decode((string) ($assessment['snapshot_json'] ?? ''), true);
+
+        foreach ($snapshot['criteria'] ?? [] as $criterion) {
+            if (($criterion['key'] ?? null) === 'time_in_grade') {
+                return $criterion;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Counts each reservist's MOST RECENT assessment by
      * `promotion_status` (eligible / not_yet_eligible / overdue / null),
      * optionally scoped to a single organizational unit. Powers the

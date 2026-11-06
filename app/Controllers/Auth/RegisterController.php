@@ -77,6 +77,16 @@ class RegisterController extends ShieldRegisterController
                 'label' => 'Date of Last Promotion',
                 'rules' => ['permit_empty', 'valid_date', 'not_future_date'],
             ],
+            // Picks the MLES column (General / 1st Year College / ROTC
+            // Professional). Required because a missing track falls back
+            // to the General threshold, the longest of the three -- that
+            // is how a reservist who should read Eligible read "Not Yet
+            // Eligible". Separate from is_student: a current student and a
+            // graduate can sit on the same track.
+            'education_track_id' => [
+                'label' => 'Education Track',
+                'rules' => ['required', 'is_natural_no_zero', 'is_not_unique[education_tracks.id]'],
+            ],
             'is_student' => [
                 'label' => 'Schooling',
                 'rules' => ['required', 'in_list[0,1]'],
