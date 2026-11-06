@@ -15,8 +15,10 @@ use CodeIgniter\Database\Seeder;
  * thesis expresses the matrix in terms of eight enlisted grades
  * (E-1..E-8) without stating which grade corresponds to which rank
  * title; E-7 and E-8 share identical thresholds and this codebase only
- * seeds ranks up to MSG (no rank above it), so this seeder maps E-1..E-6
- * onto the six adjacent rank pairs below in ascending order. This
+ * seeds ranks up to MSG (no rank above it), so PVT is E-1 and the six
+ * adjacent rank pairs below are the promotions INTO E-2..E-7 -- each
+ * governed by Table 3's row for the grade promoted into (see
+ * `PromotionRuleVersionsSeeder`). This
  * grade-to-rank-title mapping is an inference, not a cited fact, and
  * REQUIRES OFFICIAL AFP/PHILIPPINE ARMY VALIDATION before being relied
  * upon for an actual promotion decision.

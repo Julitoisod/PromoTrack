@@ -22,19 +22,24 @@ use CodeIgniter\Database\Seeder;
 class PromotionRuleVersionsSeeder extends Seeder
 {
     /**
-     * Table 3 thresholds in whole years, keyed by the "from" rank code,
-     * for the General / Completed 1st Year College / ROTC Professional
-     * tracks respectively.
+     * Table 3 thresholds in whole years for the General / Completed 1st
+     * Year College / ROTC Professional tracks, keyed by the rank a
+     * reservist is promoted FROM. Each row is Table 3's row for the grade
+     * being promoted INTO: its E-1 row ("None Required", 0/0/0) is the
+     * entry grade, not a zero-year wait before a Private makes PFC.
+     *
+     * Version 1 originally used the row one grade lower;
+     * `CorrectMlesMatrixRowsMigration` supersedes it on existing installs.
      *
      * @var array<string, array{0: int, 1: int, 2: int}>
      */
     private const MLES_YEARS_BY_FROM_RANK = [
-        'PVT' => [0, 0, 0],   // E-1
-        'PFC' => [2, 2, 1],   // E-2
-        'CPL' => [4, 3, 2],   // E-3
-        'SGT' => [7, 6, 3],   // E-4
-        'SSG' => [10, 9, 4],  // E-5
-        'TSG' => [13, 12, 7], // E-6
+        'PVT' => [2, 2, 1],    // -> PFC, Table 3 E-2
+        'PFC' => [4, 3, 2],    // -> CPL, E-3
+        'CPL' => [7, 6, 3],    // -> SGT, E-4
+        'SGT' => [10, 9, 4],   // -> SSG, E-5
+        'SSG' => [13, 12, 7],  // -> TSG, E-6
+        'TSG' => [17, 15, 11], // -> MSG, E-7
     ];
 
     public function run(): void
