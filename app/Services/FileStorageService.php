@@ -43,26 +43,7 @@ class FileStorageService
      */
     public function store(UploadedFile $file, int $packageDocumentId, int $uploadedByUserId): array
     {
-        if (! $file->isValid()) {
-            throw new RuntimeException('The uploaded file could not be read: ' . $file->getErrorString());
-        }
-
-        if ($file->getSize() > self::MAX_FILE_SIZE_BYTES) {
-            throw new RuntimeException('The uploaded file exceeds the 10 MB size limit.');
-        }
-
-        // The whitelist decision is made from the file's own bytes. The browser
-        // also sends a Content-Type and a filename, but both are attacker-
-        // controlled strings; they are kept as metadata only.
-        $mimeType  = $this->detectMimeType($file->getTempName());
-        $extension = strtolower((string) Mimes::guessExtensionFromType($mimeType));
-
-        if ($mimeType === ''
-            || ! in_array($mimeType, self::ALLOWED_MIME_TYPES, true)
-            || ! in_array($extension, self::ALLOWED_EXTENSIONS, true)
-        ) {
-            throw new RuntimeException('Only PDF, JPG, and PNG files are accepted.');
-        }
+        [$mimeType, $extension] = $this->acceptedType($file, self::ALLOWED_MIME_TYPES, 'Only PDF, JPG, and PNG files are accepted.');
 
         $checksum = hash_file('sha256', $file->getTempName());
 
@@ -100,6 +81,91 @@ class FileStorageService
         ]);
 
         return $this->documentVersionModel->find($this->documentVersionModel->getInsertID());
+    }
+
+    /**
+     * Stores a file that is not a package document version -- a profile
+     * photo, an ROTC justification letter -- under
+     * `writable/uploads/{$subdirectory}/`, with the same checks as store():
+     * type detected from the file's own bytes, randomized name, size cap.
+     *
+     * @param list<string> $allowedMimeTypes subset of the PDF/JPEG/PNG whitelist
+     *
+     * @return array{stored_filename: string, original_filename: string, mime_type: string}
+     */
+    public function storeAttachment(UploadedFile $file, string $subdirectory, array $allowedMimeTypes, string $typeMessage): array
+    {
+        $allowed = array_values(array_intersect($allowedMimeTypes, self::ALLOWED_MIME_TYPES));
+
+        [$mimeType, $extension] = $this->acceptedType($file, $allowed, $typeMessage);
+
+        $destinationDir = WRITEPATH . 'uploads/' . trim($subdirectory, '/');
+
+        if (! is_dir($destinationDir) && ! mkdir($destinationDir, 0755, true) && ! is_dir($destinationDir)) {
+            throw new RuntimeException('The upload destination could not be created.');
+        }
+
+        $storedFilename = bin2hex(random_bytes(16)) . '.' . $extension;
+        $originalName   = $file->getClientName();
+
+        $file->move($destinationDir, $storedFilename);
+
+        return [
+            'stored_filename'   => $storedFilename,
+            'original_filename' => $originalName,
+            'mime_type'         => $mimeType,
+        ];
+    }
+
+    /**
+     * Absolute path of a file stored by storeAttachment(), or null when the
+     * name is not a plain stored filename or the file is gone. The name comes
+     * from the database, but it is still checked so it can never walk out of
+     * the upload directory.
+     */
+    public function attachmentPath(string $subdirectory, ?string $storedFilename): ?string
+    {
+        if ($storedFilename === null || preg_match('/^[a-f0-9]{32}\.(pdf|jpg|jpeg|png)$/', $storedFilename) !== 1) {
+            return null;
+        }
+
+        $path = WRITEPATH . 'uploads/' . trim($subdirectory, '/') . DIRECTORY_SEPARATOR . $storedFilename;
+
+        return is_file($path) ? $path : null;
+    }
+
+    /**
+     * Validates the upload and returns [mime type, extension]. Throws
+     * RuntimeException with a user-facing message when it is refused.
+     *
+     * @param list<string> $allowedMimeTypes
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function acceptedType(UploadedFile $file, array $allowedMimeTypes, string $typeMessage): array
+    {
+        if (! $file->isValid()) {
+            throw new RuntimeException('The uploaded file could not be read: ' . $file->getErrorString());
+        }
+
+        if ($file->getSize() > self::MAX_FILE_SIZE_BYTES) {
+            throw new RuntimeException('The uploaded file exceeds the 10 MB size limit.');
+        }
+
+        // The whitelist decision is made from the file's own bytes. The browser
+        // also sends a Content-Type and a filename, but both are attacker-
+        // controlled strings; they are kept as metadata only.
+        $mimeType  = $this->detectMimeType($file->getTempName());
+        $extension = strtolower((string) Mimes::guessExtensionFromType($mimeType));
+
+        if ($mimeType === ''
+            || ! in_array($mimeType, $allowedMimeTypes, true)
+            || ! in_array($extension, self::ALLOWED_EXTENSIONS, true)
+        ) {
+            throw new RuntimeException($typeMessage);
+        }
+
+        return [$mimeType, $extension];
     }
 
     /**

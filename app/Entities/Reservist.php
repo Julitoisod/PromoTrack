@@ -129,4 +129,33 @@ class Reservist extends Entity
 
         return (string) ($this->attributes['student_year_level'] ?? 'Student');
     }
+
+    /**
+     * "Bachelor's Degree (BS Information Technology)", or null when the
+     * reservist never answered the question (records from before it existed).
+     */
+    public function getAttainmentLabel(): ?string
+    {
+        $key = $this->attributes['educational_attainment'] ?? null;
+
+        if ($key === null || $key === '') {
+            return null;
+        }
+
+        $label   = \App\Models\ReservistModel::EDUCATIONAL_ATTAINMENTS[$key] ?? ucfirst((string) $key);
+        $details = trim((string) ($this->attributes['degree_details'] ?? ''));
+
+        return $details !== '' ? $label . ' (' . $details . ')' : $label;
+    }
+
+    /**
+     * A student reservist: an undergraduate who is still enrolled. These are
+     * the accounts the client's student dashboard and ROTC ladder are for;
+     * everyone else keeps the general reservist view.
+     */
+    public function isStudentReservist(): bool
+    {
+        return ! empty($this->attributes['is_student'])
+            && ($this->attributes['educational_attainment'] ?? null) === 'undergraduate';
+    }
 }

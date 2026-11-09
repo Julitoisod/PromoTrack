@@ -1,0 +1,560 @@
+/* PromoTrack AFP-RF — reservist portal (dashboard, profile, ROTC progress,
+   notifications, settings), per the client's student dashboard mock-up of
+   2026-11-09. Loaded after app.css by layouts/main.php; the rules only reach
+   elements the portal views render, plus `body.portal` for the side menu. */
+
+/* ---------- Side menu ---------- */
+
+.sidebar.sidebar-portal {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 0.85rem 1rem;
+    color: #fff;
+    background:
+        url("../img/sidebar-soldiers.svg") center bottom 3.5rem / 100% auto no-repeat,
+        linear-gradient(180deg, #0f3f1c 0%, var(--pt-darkest) 100%);
+}
+
+.portal-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.portal-brand img {
+    width: 104px;
+    filter: drop-shadow(0 0.3rem 0.7rem rgba(0, 0, 0, 0.45));
+    height: auto;
+    margin-bottom: 0.35rem;
+}
+
+.portal-brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.portal-brand-sub {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.sidebar-portal .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.6rem;
+    font-size: 0.93rem;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.sidebar-portal .nav-link i {
+    width: 1.25rem;
+    text-align: center;
+    font-size: 1.05rem;
+}
+
+.sidebar-portal .nav-link:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #fff;
+}
+
+.sidebar-portal .nav-link.active {
+    background: #3f8a2a;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.28);
+}
+
+.portal-logout {
+    margin-top: auto;
+}
+
+.sidebar-collapsed .portal-brand-name,
+.sidebar-collapsed .portal-brand-sub {
+    display: none;
+}
+
+.sidebar-collapsed .portal-brand img {
+    width: 48px;
+}
+
+.sidebar-collapsed .sidebar-portal .nav-link {
+    justify-content: center;
+    padding: 0.65rem 0;
+}
+
+.sidebar-collapsed .sidebar.sidebar-portal {
+    background: linear-gradient(180deg, #0f3f1c 0%, var(--pt-darkest) 100%);
+}
+
+.nav-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Welcome banner ---------- */
+
+.portal-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    min-height: 170px;
+    margin-bottom: 1.25rem;
+    padding: 1.5rem 1.75rem;
+    border-radius: 1.1rem;
+    color: #fff;
+    background:
+        linear-gradient(90deg, rgba(8, 38, 17, 0.92) 0%, rgba(8, 38, 17, 0.6) 40%, rgba(8, 38, 17, 0) 70%),
+        url("../img/hero-soldiers.svg") right bottom / auto 100% no-repeat,
+        url("../img/hero-ground.svg") left bottom / auto 100% repeat-x,
+        var(--pt-sky);
+    box-shadow: var(--pt-shadow);
+    overflow: hidden;
+}
+
+.portal-avatar,
+.profile-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.portal-avatar {
+    width: 120px;
+    height: 120px;
+    border: 4px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 3.5rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.profile-photo {
+    width: 140px;
+    height: 140px;
+    border: 4px solid var(--pt-line);
+    background: var(--pt-field);
+    font-size: 4rem;
+    color: var(--pt-muted);
+}
+
+.portal-avatar img,
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.portal-hero h1 {
+    margin: 0 0 0.2rem;
+    font-size: 1.85rem;
+    font-weight: 800;
+}
+
+.portal-hero-role {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.portal-hero-place {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Tiles ---------- */
+
+.portal-tile {
+    height: 100%;
+    padding: 1rem 1.1rem;
+    border-radius: 0.95rem;
+    border: 1px solid transparent;
+}
+
+.portal-tile > i {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 1.6rem;
+}
+
+.portal-tile .tile-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.portal-tile .tile-value-sm {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.portal-tile .tile-label {
+    margin-top: 0.2rem;
+    font-size: 0.78rem;
+    color: var(--pt-muted);
+}
+
+.tile-blue { background: #e9f1fb; border-color: #cfe0f5; }
+.tile-blue > i, .tile-blue .tile-value { color: #1f4f8a; }
+.tile-green { background: #eaf3e3; border-color: #cfe3c1; }
+.tile-green > i, .tile-green .tile-value { color: #3d6b22; }
+.tile-purple { background: #f0ebfa; border-color: #ddd2f3; }
+.tile-purple > i, .tile-purple .tile-value { color: #5b3f9b; }
+.tile-warning { background: #fdf1e0; border-color: #f6dcb3; }
+.tile-warning > i, .tile-warning .tile-value { color: #a5640b; }
+.tile-success { background: #e5f4ea; border-color: #c3e5ce; }
+.tile-success > i, .tile-success .tile-value { color: #1f7a3d; }
+.tile-danger { background: #fbe9e9; border-color: #f2c9c9; }
+.tile-danger > i, .tile-danger .tile-value { color: #a52a2a; }
+
+/* ---------- Cards ---------- */
+
+.portal-card .card-header {
+    font-size: 1.02rem;
+    font-weight: 700;
+}
+
+.portal-link {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--pt-primary);
+    text-decoration: none;
+}
+
+.portal-link:hover {
+    text-decoration: underline;
+}
+
+.info-list {
+    display: grid;
+    grid-template-columns: minmax(8rem, auto) 1fr;
+    gap: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.info-list dt {
+    font-weight: 600;
+    color: var(--pt-dark);
+}
+
+.info-list dd {
+    margin: 0;
+}
+
+.info-list dd::before {
+    content: ": ";
+    color: var(--pt-muted);
+}
+
+/* MS31-MS42 vertical steps. */
+.ms-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ms-steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.55rem 0;
+}
+
+.ms-steps li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 0.69rem;
+    top: 2.1rem;
+    bottom: -0.45rem;
+    width: 2px;
+    background: var(--pt-line);
+}
+
+.ms-steps li.done:not(:last-child)::after {
+    background: #3d9a50;
+}
+
+.ms-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #c4c9bd;
+    color: #fff;
+    font-size: 0.8rem;
+}
+
+.ms-steps li.done .ms-dot {
+    background: #2f9a48;
+}
+
+.ms-name {
+    flex: 1;
+}
+
+.badge-done { background: #d8f0dd; color: #1f7a3d; }
+.badge-pending { background: #e6e9ef; color: #5b6475; }
+.badge-pending-warn { background: #fdf0d5; color: #9a6206; }
+.badge-blocked { background: #fbe0e0; color: #a52a2a; }
+.badge-locked { background: #eceee8; color: #858b7c; }
+
+/* "Your Current Status" banner card. */
+.status-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid;
+    overflow: hidden;
+}
+
+.status-success { background: #e6f5e9; border-color: #bfe3c8; }
+.status-warning { background: #fdf3df; border-color: #f2d9a6; }
+.status-danger { background: #fbe8e8; border-color: #f0c4c4; }
+
+.status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    color: #fff;
+}
+
+.status-success .status-icon { background: #2f9a48; }
+.status-warning .status-icon { background: #d39220; }
+.status-danger .status-icon { background: #c0392b; }
+
+.status-kicker {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--pt-dark);
+}
+
+.status-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.status-success .status-title { color: #1f7a3d; }
+.status-warning .status-title { color: #9a6206; }
+.status-danger .status-title { color: #a52a2a; }
+
+.status-rank {
+    margin-top: 0.35rem;
+    font-size: 0.88rem;
+}
+
+.status-emblem {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 4.5rem;
+    opacity: 0.12;
+}
+
+/* ---------- ROTC ladder ---------- */
+
+.rotc-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.75rem 1.25rem;
+}
+
+.rotc-summary-grid span {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--pt-muted);
+}
+
+.rotc-ladder {
+    position: relative;
+    padding-left: 4.25rem;
+}
+
+.rotc-ladder::before {
+    content: "";
+    position: absolute;
+    left: 1.6rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 3px;
+    background: var(--pt-line);
+}
+
+.rotc-stage {
+    position: relative;
+    margin-bottom: 1rem;
+    scroll-margin-top: calc(var(--pt-navbar-height) + 1rem);
+}
+
+.rotc-stage-marker {
+    position: absolute;
+    left: -4.25rem;
+    top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    border: 3px solid var(--pt-canvas);
+    background: #c4c9bd;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.state-done .rotc-stage-marker { background: #2f9a48; }
+.state-pending .rotc-stage-marker { background: #d39220; }
+.state-blocked .rotc-stage-marker { background: #c0392b; }
+.is-current .rotc-stage-marker { box-shadow: 0 0 0 4px rgba(47, 125, 50, 0.35); }
+
+.state-locked .rotc-stage-card {
+    opacity: 0.7;
+}
+
+.is-current .rotc-stage-card {
+    border-color: var(--pt-primary);
+}
+
+.rotc-stage-title {
+    margin: 0 0 0.25rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.rotc-stage-note {
+    font-size: 0.86rem;
+    color: var(--pt-muted);
+}
+
+.rotc-field {
+    margin-bottom: 1rem;
+}
+
+.rotc-field-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--pt-dark);
+}
+
+.rotc-subhead {
+    margin: 0.35rem 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--pt-muted);
+}
+
+.check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 0.3rem 1rem;
+}
+
+.choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.btn-choice {
+    border: 1px solid var(--pt-line);
+    background: #fff;
+    color: var(--pt-ink);
+    font-weight: 600;
+}
+
+.btn-choice:hover {
+    border-color: var(--pt-primary);
+    color: var(--pt-primary);
+}
+
+.btn-check:checked + .btn-choice {
+    background: var(--pt-primary);
+    border-color: var(--pt-primary);
+    color: #fff;
+}
+
+/* ---------- Notifications ---------- */
+
+.notification-list .is-unread {
+    background: #eef7ec;
+    border-left: 3px solid var(--pt-primary);
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 767.98px) {
+    .portal-hero {
+        flex-direction: column;
+        text-align: center;
+        background:
+            linear-gradient(180deg, rgba(8, 38, 17, 0.9) 0%, rgba(8, 38, 17, 0.75) 100%),
+            url("../img/hero-soldiers.svg") right bottom / auto 100% no-repeat,
+            url("../img/hero-ground.svg") left bottom / auto 100% repeat-x,
+            var(--pt-sky);
+    }
+
+    .portal-avatar {
+        width: 96px;
+        height: 96px;
+    }
+
+    .portal-hero h1 {
+        font-size: 1.45rem;
+    }
+
+    .rotc-ladder {
+        padding-left: 0;
+    }
+
+    .rotc-ladder::before,
+    .rotc-stage-marker {
+        display: none;
+    }
+
+    .status-emblem {
+        display: none;
+    }
+}
+
+/* Staff reservist profile: the reservist's photo beside their name. */
+.staff-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--pt-line);
+}
+
+/* PARF logo beside the product name in the top bar. */
+.navbar-logo {
+    height: 34px;
+    width: auto;
+    vertical-align: middle;
+}

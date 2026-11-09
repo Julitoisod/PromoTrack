@@ -139,14 +139,43 @@ $field = static function (string $name, $default = '') use ($reservist) {
         <label for="student_year_level" class="form-label">Year Level</label>
         <select class="form-select" id="student_year_level" name="student_year_level">
             <option value="">-- Not applicable --</option>
-            <?php foreach (App\Models\ReservistModel::STUDENT_YEAR_LEVELS as $yearLevel): ?>
-                <option value="<?= esc($yearLevel) ?>" <?= (string) $field('student_year_level') === $yearLevel ? 'selected' : '' ?>>
+            <?php
+            // A record saved before the semester list keeps its whole-year
+            // value selectable, so saving the form does not silently drop it.
+            $yearLevelOptions = App\Models\ReservistModel::STUDENT_YEAR_LEVELS;
+            $currentYearLevel = (string) $field('student_year_level');
+            if (in_array($currentYearLevel, App\Models\ReservistModel::LEGACY_YEAR_LEVELS, true)) {
+                $yearLevelOptions[] = $currentYearLevel;
+            }
+            ?>
+            <?php foreach ($yearLevelOptions as $yearLevel): ?>
+                <option value="<?= esc($yearLevel) ?>" <?= $currentYearLevel === $yearLevel ? 'selected' : '' ?>>
                     <?= esc($yearLevel) ?>
                 </option>
             <?php endforeach; ?>
         </select>
         <div class="form-text">Ignored unless the reservist is still studying.</div>
         <?= view('components/form_errors', ['field' => 'student_year_level']) ?>
+    </div>
+
+    <div class="col-md-4">
+        <label for="educational_attainment" class="form-label">Educational Attainment</label>
+        <select class="form-select" id="educational_attainment" name="educational_attainment">
+            <option value="">-- Select --</option>
+            <?php foreach (App\Models\ReservistModel::EDUCATIONAL_ATTAINMENTS as $attainValue => $attainLabel): ?>
+                <option value="<?= esc($attainValue) ?>" <?= (string) $field('educational_attainment') === $attainValue ? 'selected' : '' ?>>
+                    <?= esc($attainLabel) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Undergraduate + still studying puts the reservist on the ROTC ladder.</div>
+        <?= view('components/form_errors', ['field' => 'educational_attainment']) ?>
+    </div>
+    <div class="col-md-4">
+        <label for="degree_details" class="form-label">Degree / Specify</label>
+        <input type="text" class="form-control" id="degree_details" name="degree_details" maxlength="150"
+               value="<?= esc($field('degree_details')) ?>">
+        <?= view('components/form_errors', ['field' => 'degree_details']) ?>
     </div>
 
     <div class="col-md-4">

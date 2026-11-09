@@ -30,7 +30,7 @@ $base = site_url('admin/reference/' . $set);
 <div class="card mb-4">
     <div class="card-header">Add <?= esc($config['singular']) ?></div>
     <div class="card-body">
-        <form method="post" action="<?= esc($base) ?>" class="row g-2 align-items-end">
+        <form method="post" action="<?= esc($base) ?>" class="row g-2 align-items-start">
             <?= csrf_field() ?>
             <?php foreach ($config['columns'] as $column => $meta): ?>
                 <div class="col-md-<?= $meta['type'] === 'checkbox' ? '2' : '3' ?>">
@@ -42,6 +42,20 @@ $base = site_url('admin/reference/' . $set);
                                 <?= esc($meta['label']) ?>
                             </label>
                         </div>
+                    <?php elseif ($meta['type'] === 'select'): ?>
+                        <label class="form-label" for="new_<?= esc($column, 'attr') ?>"><?= esc($meta['label']) ?></label>
+                        <select class="form-select form-select-sm" id="new_<?= esc($column, 'attr') ?>" name="<?= esc($column, 'attr') ?>">
+                            <option value="">— None —</option>
+                            <?php foreach ($options[$column] ?? [] as $optionValue => $optionLabel): ?>
+                                <option value="<?= esc((string) $optionValue, 'attr') ?>" <?= (string) old($column) === (string) $optionValue ? 'selected' : '' ?>>
+                                    <?= esc($optionLabel) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?= view('components/form_errors', ['field' => $column]) ?>
+                        <?php if (isset($meta['help'])): ?>
+                            <div class="form-text"><?= esc($meta['help']) ?></div>
+                        <?php endif; ?>
                     <?php else: ?>
                         <label class="form-label" for="new_<?= esc($column, 'attr') ?>"><?= esc($meta['label']) ?></label>
                         <input type="<?= esc($meta['type'], 'attr') ?>" class="form-control form-control-sm"
@@ -55,8 +69,8 @@ $base = site_url('admin/reference/' . $set);
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <div class="col-md-2 d-grid">
-                <button type="submit" class="btn btn-sm btn-primary">
+            <div class="col-md-2 d-grid pt-md-4">
+                <button type="submit" class="btn btn-sm btn-primary mt-md-2">
                     <i class="bi bi-plus-lg me-1"></i> Add
                 </button>
             </div>
@@ -99,6 +113,21 @@ $base = site_url('admin/reference/' . $set);
                                                    name="<?= esc($column, 'attr') ?>"
                                                    aria-label="<?= esc($meta['label'], 'attr') ?>"
                                                    <?= ((int) ($row[$column] ?? 0)) === 1 ? 'checked' : '' ?>>
+                                        <?php elseif ($meta['type'] === 'select'): ?>
+                                            <select class="form-select form-select-sm"
+                                                    form="edit-<?= esc($row['id'], 'attr') ?>"
+                                                    name="<?= esc($column, 'attr') ?>"
+                                                    aria-label="<?= esc($meta['label'], 'attr') ?>">
+                                                <option value="">— None —</option>
+                                                <?php foreach ($options[$column] ?? [] as $optionValue => $optionLabel): ?>
+                                                    <?php if ((string) $optionValue === (string) $row['id']) {
+                                                        continue;
+                                                    } ?>
+                                                    <option value="<?= esc((string) $optionValue, 'attr') ?>" <?= (string) ($row[$column] ?? '') === (string) $optionValue ? 'selected' : '' ?>>
+                                                        <?= esc($optionLabel) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         <?php else: ?>
                                             <input type="<?= esc($meta['type'], 'attr') ?>" class="form-control form-control-sm"
                                                    form="edit-<?= esc($row['id'], 'attr') ?>"

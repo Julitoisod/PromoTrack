@@ -60,6 +60,17 @@ duplicate unit code. Drop and re-migrate to reseed from scratch.
 
 ---
 
+## Reservist portal
+
+A reservist signs up at `/register` (CDC, company, sex, birth date, contact, address, educational
+attainment, rank category and rank) and lands on their own portal: **Dashboard**, **My Profile** (with
+photo), **ROTC Progress**, **My Documents** (the promotion package checklist), **Notifications** and
+**Settings** (password). An undergraduate who is still enrolled gets the student dashboard and the
+E1–E8 ROTC ladder from the client's revision of 2026-11-09; everyone else gets the general reservist
+dashboard. A Master Sergeant is told the promotion is processed at RCDG level and cannot open a package.
+
+---
+
 ## Tests
 
 ```bash
@@ -77,6 +88,10 @@ database must exist and the credentials in `.env` must be able to create tables 
 | `tests/Feature/ReservistRecordsTest.php` | Service-record add/remove and their ownership guards |
 | `tests/Feature/PromotionRuleVersioningTest.php` | That a rule change supersedes rather than overwrites |
 | `tests/Feature/ReservistManagementTest.php` | Reservist CRUD end to end |
+| `tests/Feature/ReservistRegistrationTest.php` | The client sign-up form: required fields, CDC/company match, rank category, derived track, Master Sergeant notice |
+| `tests/Feature/ReservistPortalTest.php` | The reservist portal pages, who can reach them, profile edits, ROTC saves, password change |
+| `tests/unit/RotcProgressServiceTest.php` | The student E1–E8 ladder: completion, blocking, cadet and reserve ranks, GMA |
+| `tests/ui/ui-test.mjs` | Chrome walk-through: staff verdicts, sign-up, the student portal, photo upload (`npm install && node ui-test.mjs <baseUrl> <outDir>`) |
 
 ---
 

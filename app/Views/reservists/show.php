@@ -3,7 +3,12 @@
 <?= $this->section('content') ?>
 <?php $showUser = auth()->user(); ?>
 <div class="page-head">
-    <h1 class="page-title"><?= esc($reservist->getFullName()) ?></h1>
+    <div class="d-flex align-items-center gap-3">
+        <?php if ($reservist->profile_photo !== null): ?>
+            <img src="<?= esc(site_url('reservists/' . $reservist->id . '/photo')) ?>" alt="" class="staff-avatar" width="56" height="56">
+        <?php endif; ?>
+        <h1 class="page-title"><?= esc($reservist->getFullName()) ?></h1>
+    </div>
     <div class="d-flex gap-2">
         <?php if ($showUser !== null && $showUser->can('reservists.update')): ?>
             <a href="<?= esc(site_url('reservists/' . $reservist->id . '/edit')) ?>" class="btn btn-outline-primary">
@@ -75,6 +80,9 @@ $statusBadge = match ($reservist->status) {
                     <dt class="col-sm-5">Education Track</dt>
                     <dd class="col-sm-7"><?= esc($educationTrack['track_name'] ?? '—') ?></dd>
 
+                    <dt class="col-sm-5">Educational Attainment</dt>
+                    <dd class="col-sm-7"><?= esc($reservist->getAttainmentLabel() ?? '—') ?></dd>
+
                     <dt class="col-sm-5">Schooling</dt>
                     <dd class="col-sm-7"><?= esc($reservist->getSchoolingLabel()) ?></dd>
 
@@ -96,6 +104,61 @@ $statusBadge = match ($reservist->status) {
             </div>
         </div>
     </div>
+
+    <?php if ($rotc !== null): ?>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                    <span>ROTC Progress <span class="text-muted fw-normal small">(reported by the student)</span></span>
+                    <span class="badge text-bg-<?= esc($rotc['status']['tone']) ?>"><?= esc($rotc['status']['title']) ?></span>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-3">Current Level</dt>
+                        <dd class="col-sm-9"><?= esc($rotc['currentLabel'] . ' · ' . $rotc['currentLevel']) ?></dd>
+                        <dt class="col-sm-3">Cadet Rank</dt>
+                        <dd class="col-sm-9"><?= $rotc['rankHidden'] ? 'Not shown (training incomplete)' : esc($rotc['cadetRank'] ?? '—') ?></dd>
+                        <dt class="col-sm-3">Reserve Rank Earned</dt>
+                        <dd class="col-sm-9"><?= $rotc['rankHidden'] ? '—' : esc($rotc['reserveRank'] ?? '—') ?></dd>
+                        <dt class="col-sm-3">Classification</dt>
+                        <dd class="col-sm-9"><?= esc($rotc['classification'] ?? '—') ?></dd>
+                    </dl>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Stage</th><th>Semester</th><th>State</th><th>Answers</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($rotc['stages'] as $code => $stage): ?>
+                                    <?php
+                                    $stageRow = $stage['row'];
+                                    $answers  = array_filter([
+                                        $stageRow['training_result'] ?? null,
+                                        isset($stageRow['recommendation']) ? str_replace('_', ' ', $stageRow['recommendation']) : null,
+                                        isset($stageRow['classification']) ? str_replace('_', ' ', $stageRow['classification']) : null,
+                                        $stageRow['pose_rank'] ?? null,
+                                        ($stageRow['checks'] ?? []) !== [] ? implode(', ', $stageRow['checks']) : null,
+                                    ]);
+                                    ?>
+                                    <tr>
+                                        <td><?= esc($stage['label']) ?></td>
+                                        <td><?= esc($stage['config']['level']) ?></td>
+                                        <td><?= esc(ucfirst($stage['state'])) ?></td>
+                                        <td>
+                                            <?= $answers !== [] ? esc(implode(' · ', $answers)) : '<span class="text-muted">—</span>' ?>
+                                            <?php if ($code === 'E4' && ($stageRow['justification_path'] ?? null) !== null): ?>
+                                                <a href="<?= esc(site_url('reservists/' . $reservist->id . '/rotc-justification')) ?>" class="ms-2">
+                                                    <i class="bi bi-paperclip"></i> Justification letter
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <?= view('reservists/_records', [
         'reservist'     => $reservist,

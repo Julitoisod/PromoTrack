@@ -21,6 +21,7 @@ use App\Models\PromotionRuleModel;
 use App\Models\PromotionRuleVersionModel;
 use App\Models\ReservistModel;
 use App\Models\ReservistTrainingModel;
+use App\Models\RotcProgressModel;
 use App\Models\TrainingTypeModel;
 use App\Models\UserModel;
 use App\Services\AuditLogService;
@@ -28,6 +29,7 @@ use App\Services\DocumentValidationService;
 use App\Services\EligibilityService;
 use App\Services\FileStorageService;
 use App\Services\NotificationService;
+use App\Services\RotcProgressService;
 use App\Services\PackageWorkflowService;
 use App\Services\ReportService;
 use App\Services\ReservistRegistrationService;
@@ -166,5 +168,14 @@ class Services extends BaseService
             new EndorsementModel(),
             new PromotionAssessmentModel(),
         );
+    }
+
+    public static function rotcProgressService(bool $getShared = true): RotcProgressService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('rotcProgressService');
+        }
+
+        return new RotcProgressService(new RotcProgressModel(), config(RotcProgression::class));
     }
 }

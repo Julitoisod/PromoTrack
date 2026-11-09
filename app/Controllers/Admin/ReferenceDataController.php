@@ -44,7 +44,9 @@ class ReferenceDataController extends BaseController
             'columns'  => [
                 'unit_code' => ['label' => 'Unit code', 'type' => 'text', 'required' => true],
                 'unit_name' => ['label' => 'Unit name', 'type' => 'text', 'required' => true],
-                'unit_type' => ['label' => 'Type', 'type' => 'text', 'help' => 'e.g. RCDG, CDC, battalion. Use "company" for Alpha/Bravo/Charlie — those appear in the reservist company picker rather than the unit picker.'],
+                'unit_type' => ['label' => 'Type', 'type' => 'text', 'help' => 'e.g. rcdg, cdc, battalion. Use "company" for Alpha/Bravo/Charlie — those appear in the reservist company picker rather than the unit picker.'],
+                // A company is offered at sign-up under the CDC it is parented to.
+                'parent_unit_id' => ['label' => 'Parent unit', 'type' => 'select', 'help' => 'For a company: the CDC it belongs to.'],
             ],
         ],
         'ranks' => [
@@ -54,7 +56,7 @@ class ReferenceDataController extends BaseController
             'columns'  => [
                 'rank_code'     => ['label' => 'Rank code', 'type' => 'text', 'required' => true],
                 'rank_name'     => ['label' => 'Rank name', 'type' => 'text', 'required' => true],
-                'rank_category' => ['label' => 'Category', 'type' => 'text', 'help' => 'enlisted / non-commissioned / commissioned'],
+                'rank_category' => ['label' => 'Category', 'type' => 'text', 'help' => 'enlisted / non-commissioned / commissioned / rotc'],
                 'sort_order'    => ['label' => 'Order', 'type' => 'number', 'required' => true, 'help' => 'Low to high; promotion direction is decided by this value.'],
             ],
         ],
@@ -95,7 +97,30 @@ class ReferenceDataController extends BaseController
             'sets'     => $this->setIndex(),
             'config'   => $config,
             'rows'     => $model->orderBy($this->displayOrderColumn($config), 'ASC')->findAll(),
+            'options'  => $this->selectOptions($set),
         ]);
+    }
+
+    /**
+     * Choices for the set's `select` columns: column => [value => label].
+     * Only the units set has one -- the parent unit, chosen from every unit
+     * that is not itself a company.
+     *
+     * @return array<string, array<int|string, string>>
+     */
+    private function selectOptions(string $set): array
+    {
+        if ($set !== 'units') {
+            return [];
+        }
+
+        $parents = [];
+
+        foreach ((new UnitModel())->activeUnits() as $unit) {
+            $parents[$unit['id']] = $unit['unit_name'] . ' (' . $unit['unit_code'] . ')';
+        }
+
+        return ['parent_unit_id' => $parents];
     }
 
     /**
@@ -127,6 +152,11 @@ class ReferenceDataController extends BaseController
         $row    = $this->findOrFail($model, $id);
 
         $data = $this->collect($config);
+
+        if (isset($data['parent_unit_id']) && (int) $data['parent_unit_id'] === (int) $row['id']) {
+            return redirect()->back()->withInput()
+                ->with('error', 'A unit cannot be its own parent.');
+        }
 
         // Included only so the model's `is_unique[...,id,{id}]` rule resolves
         // to this row; `id` is not in $allowedFields, so it is stripped from

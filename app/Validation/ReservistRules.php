@@ -18,6 +18,73 @@ use App\Models\RankModel;
 class ReservistRules
 {
     /**
+     * `company_in_unit[organizational_unit_id]`: the chosen company must be
+     * an active company whose parent is the unit (CDC) picked in the named
+     * field, so "Alpha Company" of 1501 CDC cannot be filed under 1502 CDC.
+     */
+    public function company_in_unit(int|string|null $str, ?string $field = null, array $data = [], ?string &$error = null): bool
+    {
+        if ($str === null || $str === '') {
+            return true;
+        }
+
+        $company = model(\App\Models\UnitModel::class)->find((int) $str);
+        $unitId  = (int) ($data[(string) $field] ?? 0);
+
+        if ($company === null
+            || (int) $company['is_active'] !== 1
+            || $company['unit_type'] !== \App\Models\UnitModel::COMPANY_UNIT_TYPE
+            || (int) $company['parent_unit_id'] !== $unitId
+        ) {
+            $error = 'Choose a company that belongs to the selected CDC.';
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * `rank_in_category[rank_category]`: the chosen rank must be active and
+     * belong to the rank category picked on the sign-up form (Enlisted,
+     * ROTC Student, Officer -- see RankModel::SIGNUP_CATEGORIES).
+     */
+    public function rank_in_category(int|string|null $str, ?string $field = null, array $data = [], ?string &$error = null): bool
+    {
+        if ($str === null || $str === '') {
+            return true;
+        }
+
+        $rank       = model(RankModel::class)->find((int) $str);
+        $categories = RankModel::SIGNUP_CATEGORIES[(string) ($data[(string) $field] ?? '')]['categories'] ?? [];
+
+        if ($rank === null || (int) $rank['is_active'] !== 1 || ! in_array($rank['rank_category'], $categories, true)) {
+            $error = 'Choose a rank from the selected rank category.';
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Philippine mobile number: 09XXXXXXXXX or +639XXXXXXXXX.
+     */
+    public function ph_mobile_number(int|string|null $str, ?string $fields = null, array $data = [], ?string &$error = null): bool
+    {
+        if ($str === null || $str === '') {
+            return true;
+        }
+
+        if (preg_match('/^(09|\+639)\d{9}$/', preg_replace('/[\s-]/', '', (string) $str) ?? '') !== 1) {
+            $error = 'The {field} must be a mobile number like 09XXXXXXXXX.';
+
+            return false;
+        }
+
+        return true;
+    }
+    /**
      * A reservist number must be 3-30 characters of uppercase letters,
      * digits, and hyphens. Exact AFP numbering format
      * REQUIRES OFFICIAL AFP/PHILIPPINE ARMY VALIDATION; this is a

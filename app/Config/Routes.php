@@ -23,11 +23,35 @@ $routes->post('my/promotion/package', 'MyPromotionController::openPackage', [
     'filter' => ['session', 'permission:promotions.view_own'],
 ]);
 
+// The rest of the reservist portal (client revision of 2026-11-09): the
+// side menu's Dashboard, My Profile, ROTC Progress, Notifications and
+// Settings. Same rule as above -- never a record id in the URL.
+$routes->group('my', ['filter' => ['session', 'permission:promotions.view_own']], static function (RouteCollection $routes): void {
+    $routes->get('dashboard', 'MyDashboardController::index');
+    $routes->get('profile', 'MyProfileController::index');
+    $routes->post('profile', 'MyProfileController::update');
+    $routes->post('profile/photo', 'MyProfileController::uploadPhoto');
+    $routes->get('photo', 'MyProfileController::photo');
+    $routes->get('rotc', 'MyRotcController::index');
+    $routes->post('rotc/(E[1-8])', 'MyRotcController::save/$1');
+    $routes->get('rotc/justification', 'MyRotcController::justification');
+    $routes->get('notifications', 'MyAccountController::notifications');
+    $routes->post('notifications/read-all', 'MyAccountController::markAllRead');
+    $routes->get('settings', 'MyAccountController::settings');
+    $routes->post('settings/password', 'MyAccountController::changePassword');
+});
+
 $routes->group('reservists', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('/', 'ReservistsController::index', ['filter' => 'permission:reservists.view']);
     $routes->get('create', 'ReservistsController::create', ['filter' => 'permission:reservists.create']);
     $routes->post('/', 'ReservistsController::store', ['filter' => 'permission:reservists.create']);
     $routes->get('(:num)', 'ReservistsController::show/$1', [
+        'filter' => ['permission:reservists.view', 'unit-access:reservists,organizational_unit_id'],
+    ]);
+    $routes->get('(:num)/photo', 'ReservistsController::photo/$1', [
+        'filter' => ['permission:reservists.view', 'unit-access:reservists,organizational_unit_id'],
+    ]);
+    $routes->get('(:num)/rotc-justification', 'ReservistsController::rotcJustification/$1', [
         'filter' => ['permission:reservists.view', 'unit-access:reservists,organizational_unit_id'],
     ]);
     $routes->get('(:num)/edit', 'ReservistsController::edit/$1', [

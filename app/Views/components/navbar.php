@@ -4,6 +4,17 @@
  * authenticated page.
  */
 $navUser = auth()->user();
+
+// A reservist sees their own photo in the user menu once they have one.
+$navPhoto = null;
+
+if ($navUser !== null && $navUser->inGroup('reservist')) {
+    $navReservist = model(App\Models\ReservistModel::class)->findByUserId((int) $navUser->id);
+
+    if ($navReservist?->profile_photo !== null && $navReservist !== null) {
+        $navPhoto = site_url('my/photo') . '?v=' . substr(md5((string) $navReservist->profile_photo), 0, 8);
+    }
+}
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark pt-navbar px-3 fixed-top" aria-label="Top bar">
     <button class="btn me-2" type="button" id="sidebarToggle" aria-label="Toggle sidebar"
@@ -12,7 +23,7 @@ $navUser = auth()->user();
     </button>
 
     <a class="navbar-brand fw-semibold" href="<?= esc(site_url('/')) ?>">
-        <i class="bi bi-shield-check me-1"></i> PromoTrack AFP-RF
+        <img src="<?= esc(base_url('assets/img/logo-parf-96.png')) ?>" alt="" class="navbar-logo me-2" width="40" height="34"> PromoTrack AFP-RF
     </a>
 
     <div class="ms-auto d-flex align-items-center">
@@ -28,7 +39,11 @@ $navUser = auth()->user();
             </div>
             <div class="dropdown">
                 <button class="btn dropdown-toggle d-flex align-items-center" type="button" id="userMenuToggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-person-circle me-1"></i>
+                    <?php if ($navPhoto !== null): ?>
+                        <img src="<?= esc($navPhoto) ?>" alt="" class="nav-avatar me-2" width="30" height="30">
+                    <?php else: ?>
+                        <i class="bi bi-person-circle me-1"></i>
+                    <?php endif; ?>
                     <span><?= esc($navUser->username ?? $navUser->email ?? 'Account') ?></span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuToggle">

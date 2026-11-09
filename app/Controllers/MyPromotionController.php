@@ -38,7 +38,7 @@ class MyPromotionController extends BaseController
             // sign-up could not match a serial and could not create one.
             // Say so plainly instead of rendering an empty checklist.
             return view('my/promotion', [
-                'title'      => 'My Promotion',
+                'title'      => 'My Documents',
                 'reservist'  => null,
                 'package'    => null,
                 'checklist'  => [],
@@ -59,7 +59,7 @@ class MyPromotionController extends BaseController
         $unitModel = new UnitModel();
 
         return view('my/promotion', [
-            'title'      => 'My Promotion',
+            'title'      => 'My Documents',
             'reservist'  => $reservist,
             'package'    => $package,
             'checklist'  => $package !== null
@@ -114,6 +114,15 @@ class MyPromotionController extends BaseController
         if ($reservist->organizational_unit_id === null) {
             return redirect()->to(site_url('my/promotion'))
                 ->with('error', 'Your record has no unit on file, so a package cannot be opened. Please contact your unit S1 clerk.');
+        }
+
+        // Client revision of 2026-11-09: a Master Sergeant's promotion is
+        // processed at the RCDG level and cannot be applied for here.
+        if ($reservist->current_rank_id !== null
+            && RankModel::isRcdgLevel((new RankModel())->find($reservist->current_rank_id))
+        ) {
+            return redirect()->to(site_url('my/promotion'))
+                ->with('error', 'Promotion for a Master Sergeant is processed at the RCDG level and cannot be applied for in PromoTrack.');
         }
 
         // Mirrors PromotionPackagesController::store(): the target rank and

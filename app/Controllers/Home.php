@@ -23,9 +23,9 @@ class Home extends BaseController
     {
         // A reservist has no business on the command dashboard -- its
         // tiles count every package in the organization. Their landing
-        // page is their own record.
+        // page is their own dashboard.
         if ($this->isReservistAccount()) {
-            return redirect()->to(site_url('my/promotion'));
+            return redirect()->to(site_url('my/dashboard'));
         }
 
         $user = $this->currentUser();

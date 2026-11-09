@@ -1,16 +1,24 @@
 /* PromoTrack AFP-RF — brand palette.
    Loaded first by both layouts (layouts/main.php and auth/layout.php), which
-   otherwise share no stylesheet, so the brand colours have one definition. */
+   otherwise share no stylesheet, so the brand colours have one definition.
+
+   Forest green with a bright gold accent, matching the client's login
+   mock-up of 2026-11-10 (the earlier olive read as dull beside it). */
 
 :root {
-    --pt-blue: #1668dc;
-    --pt-blue-deep: #0b3f96;
-    --pt-navy: #123a7a;
-    --pt-ink: #1b1f28;
-    --pt-muted: #7a8494;
-    --pt-line: #e6eaf1;
-    --pt-field: #f0f2f6;
-    --pt-canvas: #f4f6fb;
+    --pt-primary: #2f7d32;       /* forest green: buttons, active links */
+    --pt-primary-deep: #145a24;  /* gradients, hover */
+    --pt-dark: #10401b;          /* headings, top bar, primary buttons */
+    --pt-darkest: #082611;       /* sidebar foot, auth background */
+    --pt-gold: #f5c227;          /* accent: logo, highlights */
+    --pt-gold-soft: #fbedb8;
+    --pt-ink: #172119;
+    --pt-muted: #6b7a6d;
+    --pt-line: #dfe8dd;
+    --pt-field: #eef4ec;
+    --pt-canvas: #f1f6f0;
     --pt-radius: 0.85rem;
-    --pt-shadow: 0 0.35rem 1.25rem rgba(18, 58, 122, 0.08);
+    --pt-shadow: 0 0.35rem 1.25rem rgba(16, 64, 27, 0.1);
+    /* The dusk sky behind img/hero-soldiers.svg, which draws no sky itself. */
+    --pt-sky: linear-gradient(180deg, #0a2b13 0%, #134a1e 42%, #5e8a2a 74%, #f0bf3a 100%);
 }

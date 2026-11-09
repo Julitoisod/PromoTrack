@@ -132,8 +132,12 @@ class App extends BaseConfig
      *
      * @see https://www.php.net/manual/en/timezones.php for list of timezones
      *      supported by PHP.
+     *
+     * Philippine time. Under UTC, "today" lagged eight hours behind the
+     * users: between midnight and 8 AM a date entered as today was refused
+     * as a future date, and time in grade came out one day short.
      */
-    public string $appTimezone = 'UTC';
+    public string $appTimezone = 'Asia/Manila';
 
     /**
      * --------------------------------------------------------------------------

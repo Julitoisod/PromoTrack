@@ -2,18 +2,9 @@
 
 <?= $this->section('content') ?>
 <div class="page-head">
-    <h1 class="page-title">Promotion Packages</h1>
-    <?php // Four sidebar links deep-link here with a ?status filter. Without this chip the
-          // page just shows an unexplained short list under the generic title. ?>
-    <?php if ($currentStatus !== null): ?>
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small">Filtered by</span>
-            <span class="badge text-bg-secondary"><?= esc(ucwords(str_replace('_', ' ', $currentStatus))) ?></span>
-            <a class="btn btn-sm btn-outline-secondary" href="<?= esc(site_url('packages')) ?>">
-                <i class="bi bi-x-lg me-1"></i> Clear filter
-            </a>
-        </div>
-    <?php endif; ?>
+    <?php // Titled after the side-menu link that opened it (see
+          // PromotionPackagesController::index), which also stays highlighted. ?>
+    <h1 class="page-title"><?= esc($title) ?></h1>
 </div>
 
 <div class="card">
@@ -35,7 +26,7 @@
                             <th scope="col">Package #</th>
                             <th scope="col">Reservist</th>
                             <th scope="col">Unit</th>
-                            <th scope="col">Status</th>
+                            <th class="text-center" scope="col">Status</th>
                             <th scope="col">Completeness</th>
                             <th class="text-end" scope="col">Actions</th>
                         </tr>
@@ -55,7 +46,7 @@
                                 <td><?= esc($package['package_number']) ?></td>
                                 <td><?= esc($package['last_name'] . ', ' . $package['first_name']) ?> (<?= esc($package['reservist_number']) ?>)</td>
                                 <td><?= esc($package['unit_name'] ?? '—') ?></td>
-                                <td><span class="badge text-bg-<?= esc($statusBadge) ?>"><?= esc($statusLabel) ?></span></td>
+                                <td class="text-center"><span class="badge text-bg-<?= esc($statusBadge) ?>"><?= esc($statusLabel) ?></span></td>
                                 <td><?= esc((string) $package['completeness_percentage']) ?>%</td>
                                 <td class="text-end">
                                     <a href="<?= esc(site_url('packages/' . $package['id'])) ?>" class="btn btn-sm btn-outline-secondary" title="View">

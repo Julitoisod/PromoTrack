@@ -38,9 +38,69 @@ class RankModel extends Model
     protected $validationMessages = [];
     protected $skipValidation     = false;
 
+    /**
+     * The "Rank Category" dropdown on the sign-up form, mapped onto
+     * `ranks.rank_category` values.
+     *
+     * @var array<string, array{label: string, categories: list<string>}>
+     */
+    public const SIGNUP_CATEGORIES = [
+        'enlisted' => ['label' => 'Enlisted', 'categories' => ['enlisted', 'non-commissioned']],
+        'rotc'     => ['label' => 'ROTC Student', 'categories' => ['rotc']],
+        'officer'  => ['label' => 'Officer', 'categories' => ['commissioned']],
+    ];
+
+    /**
+     * Ranks whose promotion is processed at the RCDG level and cannot be
+     * applied for through PromoTrack (client revision of 2026-11-09).
+     *
+     * @var list<string>
+     */
+    public const RCDG_LEVEL_RANK_CODES = ['MSG'];
+
     public function activeRanksOrdered(): array
     {
         return $this->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+    }
+
+    /**
+     * Active ranks grouped by sign-up category key. A rank whose category is
+     * not one of the three is left out of the sign-up form.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function ranksBySignupCategory(): array
+    {
+        $grouped = array_fill_keys(array_keys(self::SIGNUP_CATEGORIES), []);
+
+        foreach ($this->activeRanksOrdered() as $rank) {
+            foreach (self::SIGNUP_CATEGORIES as $key => $category) {
+                if (in_array($rank['rank_category'], $category['categories'], true)) {
+                    $grouped[$key][] = $rank;
+                }
+            }
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * The sign-up category key a rank falls under, or null.
+     */
+    public static function signupCategoryOf(?array $rank): ?string
+    {
+        foreach (self::SIGNUP_CATEGORIES as $key => $category) {
+            if ($rank !== null && in_array($rank['rank_category'], $category['categories'], true)) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    public static function isRcdgLevel(?array $rank): bool
+    {
+        return $rank !== null && in_array($rank['rank_code'], self::RCDG_LEVEL_RANK_CODES, true);
     }
 
     /**

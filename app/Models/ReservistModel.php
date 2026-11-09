@@ -28,11 +28,51 @@ class ReservistModel extends Model
     public const PROMOTION_STATUSES = ['pending', 'not_yet_eligible', 'eligible', 'overdue'];
 
     /**
-     * Year levels offered when a reservist is still studying.
+     * Year levels offered when a reservist is still studying. Per the
+     * client revision of 2026-11-09 these are semesters, starting at 2nd
+     * Year 1st Sem: a 1st-year student is still basic ROTC, not yet a
+     * reservist. Each maps to an E-level in Config\RotcProgression.
      *
      * @var list<string>
      */
-    public const STUDENT_YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'];
+    public const STUDENT_YEAR_LEVELS = [
+        '2nd Year 1st Sem',
+        '2nd Year 2nd Sem',
+        '3rd Year 1st Sem',
+        '3rd Year 2nd Sem',
+        '4th Year 1st Sem',
+        '4th Year 2nd Sem',
+    ];
+
+    /**
+     * Whole-year values written before the semester list replaced them.
+     * Still valid on existing rows, so editing an older record does not
+     * fail validation; no form offers them any more.
+     *
+     * @var list<string>
+     */
+    public const LEGACY_YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'];
+
+    /**
+     * Educational attainment choices on the sign-up form.
+     *
+     * @var array<string, string>
+     */
+    public const EDUCATIONAL_ATTAINMENTS = [
+        'none'          => 'None',
+        'undergraduate' => 'Undergraduate',
+        'bachelor'      => "Bachelor's Degree",
+        'masteral'      => 'Masteral Degree',
+        'doctorate'     => 'Doctorate',
+        'others'        => 'Others',
+    ];
+
+    /**
+     * Attainments whose degree (or meaning of "others") must be written in.
+     *
+     * @var list<string>
+     */
+    public const ATTAINMENTS_NEEDING_DETAILS = ['bachelor', 'others'];
 
     /**
      * The reservist's most recent assessment verdict, as a correlated
@@ -58,6 +98,8 @@ class ReservistModel extends Model
         'current_rank_id',
         'date_of_last_promotion',
         'education_track_id',
+        'educational_attainment',
+        'degree_details',
         'is_student',
         'student_year_level',
         'organizational_unit_id',
@@ -65,6 +107,7 @@ class ReservistModel extends Model
         'contact_number',
         'email',
         'address',
+        'profile_photo',
         'status',
         'created_by',
     ];
@@ -91,7 +134,10 @@ class ReservistModel extends Model
         'current_rank_id'   => 'permit_empty|is_natural_no_zero',
         'education_track_id' => 'permit_empty|is_natural_no_zero',
         'is_student'        => 'permit_empty|in_list[0,1]',
-        'student_year_level' => 'permit_empty|in_list[1st Year,2nd Year,3rd Year,4th Year,5th Year]',
+        // Completed by initialize() from STUDENT_YEAR_LEVELS + LEGACY_YEAR_LEVELS.
+        'student_year_level' => 'permit_empty',
+        'educational_attainment' => 'permit_empty|in_list[none,undergraduate,bachelor,masteral,doctorate,others]',
+        'degree_details'    => 'permit_empty|max_length[150]',
         'organizational_unit_id' => 'permit_empty|is_natural_no_zero',
         'company_unit_id'   => 'permit_empty|is_natural_no_zero|is_not_unique[organizational_units.id]',
         'user_id'           => 'permit_empty|is_natural_no_zero|is_unique[reservists.user_id,id,{id}]',
@@ -116,6 +162,12 @@ class ReservistModel extends Model
     ];
 
     protected $skipValidation = false;
+
+    protected function initialize(): void
+    {
+        $this->validationRules['student_year_level'] = 'permit_empty|in_list['
+            . implode(',', array_merge(self::STUDENT_YEAR_LEVELS, self::LEGACY_YEAR_LEVELS)) . ']';
+    }
 
     /**
      * Returns reservist rows for the listing table, joined with their

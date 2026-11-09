@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" preserveAspectRatio="none">
+  <!-- Flat horizon tiled behind hero-soldiers.svg so the plain runs the full
+       width of any screen. Heights match the left edge of that scene. -->
+  <rect y="236" width="300" height="64" fill="#1b4a20"/>
+  <rect y="278" width="300" height="22" fill="#082410"/>
+</svg>

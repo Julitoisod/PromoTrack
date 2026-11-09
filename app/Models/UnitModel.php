@@ -80,4 +80,35 @@ class UnitModel extends Model
             ->orderBy('organizational_units.unit_name', 'ASC')
             ->findAll();
     }
+
+    public const CDC_UNIT_TYPE = 'cdc';
+
+    /**
+     * The units a reservist picks on the sign-up form's "CDC" dropdown.
+     * Codes sort 1501 before 1502; the sample CDC from the seeder sorts last.
+     * Falls back to every active unit when no CDC exists, so sign-up never
+     * offers an empty list.
+     */
+    public function activeCdcs(): array
+    {
+        $cdcs = $this->where('is_active', 1)
+            ->where('unit_type', self::CDC_UNIT_TYPE)
+            ->orderBy('unit_code', 'ASC')
+            ->findAll();
+
+        return $cdcs !== [] ? $cdcs : $this->activeUnits();
+    }
+
+    /**
+     * Active companies whose parent is $unitId, for a reservist editing their
+     * own company without leaving their CDC.
+     */
+    public function companiesOf(int $unitId): array
+    {
+        return $this->where('is_active', 1)
+            ->where('unit_type', self::COMPANY_UNIT_TYPE)
+            ->where('parent_unit_id', $unitId)
+            ->orderBy('unit_code', 'ASC')
+            ->findAll();
+    }
 }

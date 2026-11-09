@@ -60,8 +60,8 @@
                             <th scope="col">Rank</th>
                             <th scope="col">Unit</th>
                             <th scope="col">Company</th>
-                            <th scope="col">Promotion</th>
-                            <th scope="col">Status</th>
+                            <th class="text-center" scope="col">Promotion</th>
+                            <th class="text-center" scope="col">Status</th>
                             <th class="text-end" scope="col">Actions</th>
                         </tr>
                     </thead>
@@ -82,8 +82,8 @@
                                 <td><?= esc($reservist->rank_name ?? '—') ?></td>
                                 <td><?= esc($reservist->unit_name ?? '—') ?></td>
                                 <td><?= esc($reservist->company_name ?? '—') ?></td>
-                                <td><?= view('components/promotion_status', ['status' => $reservist->promotion_status ?? null]) ?></td>
-                                <td><span class="badge text-bg-<?= esc($statusBadge) ?>"><?= esc(ucfirst($reservist->status ?? 'active')) ?></span></td>
+                                <td class="text-center"><?= view('components/promotion_status', ['status' => $reservist->promotion_status ?? null]) ?></td>
+                                <td class="text-center"><span class="badge text-bg-<?= esc($statusBadge) ?>"><?= esc(ucfirst($reservist->status ?? 'active')) ?></span></td>
                                 <td class="text-end">
                                     <a href="<?= esc(site_url('reservists/' . $reservist->id)) ?>" class="btn btn-sm btn-outline-secondary" title="View">
                                         <i class="bi bi-eye"></i>

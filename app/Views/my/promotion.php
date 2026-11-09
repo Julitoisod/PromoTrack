@@ -2,7 +2,10 @@
 
 <?= $this->section('content') ?>
 <div class="page-head">
-    <h1 class="page-title">My Promotion</h1>
+    <div>
+        <h1 class="page-title">My Documents</h1>
+        <p class="page-subtitle">Your promotion standing and the documents for your promotion package.</p>
+    </div>
 </div>
 
 <?php if ($reservist === null): ?>
@@ -35,7 +38,7 @@
                         <dt class="col-sm-5">Rank</dt>
                         <dd class="col-sm-7"><?= esc($rank['rank_name'] ?? '—') ?></dd>
 
-                        <dt class="col-sm-5">Unit</dt>
+                        <dt class="col-sm-5">CDC</dt>
                         <dd class="col-sm-7"><?= esc($unit['unit_name'] ?? '—') ?></dd>
 
                         <dt class="col-sm-5">Company</dt>

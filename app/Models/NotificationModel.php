@@ -59,4 +59,21 @@ class NotificationModel extends Model
             ->set(['is_read' => 1])
             ->update();
     }
+
+    /**
+     * Every notification of $userId, newest first, returned unexecuted so
+     * the caller can paginate() it.
+     */
+    public function listQuery(int $userId): self
+    {
+        return $this->where('user_id', $userId)->orderBy('id', 'DESC');
+    }
+
+    public function markAllRead(int $userId): bool
+    {
+        return $this->where('user_id', $userId)
+            ->where('is_read', 0)
+            ->set(['is_read' => 1])
+            ->update();
+    }
 }

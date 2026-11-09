@@ -9,11 +9,11 @@
     --pt-sidebar-width: 260px;
     --pt-navbar-height: 60px;
 
-    /* Bootstrap ships --bs-primary as #0d6efd, which renders beside the brand blue on
+    /* Bootstrap ships --bs-primary as #0d6efd, which renders beside the brand green on
        every btn-outline-primary, text-primary and active nav-pill. Remap it once here
-       rather than overriding each component. .btn-primary keeps its own navy below. */
-    --bs-primary: var(--pt-blue);
-    --bs-primary-rgb: 22, 104, 220;
+       rather than overriding each component. .btn-primary keeps its own dark green below. */
+    --bs-primary: var(--pt-primary);
+    --bs-primary-rgb: 47, 125, 50;
 }
 
 body {
@@ -27,8 +27,10 @@ body {
 
 .navbar.pt-navbar {
     height: var(--pt-navbar-height);
-    background: linear-gradient(90deg, var(--pt-navy) 0%, var(--pt-blue-deep) 100%);
-    box-shadow: 0 0.125rem 0.75rem rgba(11, 63, 150, 0.25);
+    background: linear-gradient(90deg, var(--pt-dark) 0%, var(--pt-primary-deep) 100%);
+    /* the gold rule under the header on the login screen */
+    border-bottom: 2px solid var(--pt-gold);
+    box-shadow: 0 0.125rem 0.75rem rgba(20, 30, 12, 0.3);
 }
 
 .pt-navbar .navbar-brand {
@@ -94,13 +96,13 @@ body {
 
 .sidebar .nav-link:hover {
     background: var(--pt-field);
-    color: var(--pt-navy);
+    color: var(--pt-dark);
 }
 
 /* Current page: tinted row, brand-blue label, accent bar on the leading edge. */
 .sidebar .nav-link.active {
-    background: rgba(22, 104, 220, 0.09);
-    color: var(--pt-blue);
+    background: rgba(47, 125, 50, 0.12);
+    color: var(--pt-primary);
     font-weight: 600;
 }
 
@@ -112,7 +114,7 @@ body {
     bottom: 0.45rem;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: var(--pt-blue);
+    background: var(--pt-primary);
 }
 
 .sidebar .nav-link.disabled {
@@ -141,7 +143,7 @@ body {
 }
 
 .nav-group-toggle:hover {
-    color: var(--pt-navy);
+    color: var(--pt-dark);
 }
 
 .nav-chevron {
@@ -280,14 +282,14 @@ body.sidebar-collapsed {
 }
 
 .btn-primary {
-    background: var(--pt-navy);
-    border-color: var(--pt-navy);
+    background: var(--pt-dark);
+    border-color: var(--pt-dark);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background: #0d2f66;
-    border-color: #0d2f66;
+    background: #0b3014;
+    border-color: #0b3014;
 }
 
 .page-head {
@@ -363,7 +365,7 @@ body.sidebar-collapsed {
 .loader {
     width: 60px;
     aspect-ratio: 4;
-    background: radial-gradient(circle closest-side, var(--pt-navy) 90%, #0000) 0/calc(100%/3) 100% no-repeat;
+    background: radial-gradient(circle closest-side, var(--pt-dark) 90%, #0000) 0/calc(100%/3) 100% no-repeat;
     animation: l2 1s steps(3) infinite;
 }
 
@@ -371,4 +373,91 @@ body.sidebar-collapsed {
     to {
         background-position: 150%;
     }
+}
+
+/* A button inside an empty state keeps a normal-sized inline icon; the rule
+   above is for the large illustration icon only. */
+.empty-state .btn i {
+    display: inline;
+    font-size: inherit;
+    margin: 0;
+}
+
+/* Bootstrap's checkboxes and radios default to its own blue. */
+.form-check-input:checked {
+    background-color: var(--pt-primary);
+    border-color: var(--pt-primary);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--pt-primary);
+    box-shadow: 0 0 0 0.2rem rgba(47, 125, 50, 0.18);
+}
+
+/* Bootstrap compiles its own blue into outline buttons and links rather than
+   reading --bs-primary, so they are re-pointed at the brand green here. */
+:root {
+    --bs-link-color-rgb: 47, 125, 50;
+    --bs-link-hover-color-rgb: 16, 64, 27;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--pt-primary);
+    --bs-btn-border-color: var(--pt-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pt-primary);
+    --bs-btn-hover-border-color: var(--pt-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--pt-dark);
+    --bs-btn-active-border-color: var(--pt-dark);
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--pt-primary);
+}
+
+.nav-link {
+    --bs-nav-link-color: var(--pt-primary);
+    --bs-nav-link-hover-color: var(--pt-dark);
+}
+
+/* Pagination is another Bootstrap component with its own compiled blue. */
+.pagination {
+    --bs-pagination-color: var(--pt-primary);
+    --bs-pagination-hover-color: var(--pt-dark);
+    --bs-pagination-focus-color: var(--pt-dark);
+    --bs-pagination-active-bg: var(--pt-primary);
+    --bs-pagination-active-border-color: var(--pt-primary);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(47, 125, 50, 0.25);
+}
+
+/* Staff side menu: Bootstrap .nav wraps by default, and in a column a wrapped
+   flex line is as wide as its longest label. "Promotion Backlog Report" made
+   every row overflow the white panel, and while a group was opening (its
+   height still small) the links wrapped into a second column side by side.
+   One unwrapped column, a little more room, and an ellipsis as the backstop. */
+:root {
+    --pt-sidebar-width: 272px;
+}
+
+.sidebar {
+    padding: 0.9rem 0.7rem;
+}
+
+.sidebar .nav {
+    flex-wrap: nowrap;
+}
+
+.sidebar .nav-link {
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+    min-width: 0;
+}
+
+.sidebar .nav-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

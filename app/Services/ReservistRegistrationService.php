@@ -56,12 +56,23 @@ class ReservistRegistrationService
             'suffix'      => trim((string) ($profile['suffix'] ?? '')) ?: null,
         ];
 
+        $attainment = (string) ($profile['educational_attainment'] ?? '');
+        $attainment = array_key_exists($attainment, ReservistModel::EDUCATIONAL_ATTAINMENTS) ? $attainment : null;
+
         $schooling = [
-            'is_student'         => ! empty($profile['is_student']) ? 1 : 0,
-            'student_year_level' => null,
+            'is_student'             => ! empty($profile['is_student']) ? 1 : 0,
+            'student_year_level'     => null,
+            'educational_attainment' => $attainment,
+            // Kept only where the form asks for it, so a degree typed and
+            // then abandoned by switching to "Undergraduate" is not stored.
+            'degree_details'         => in_array($attainment, ['bachelor', 'masteral', 'doctorate', 'others'], true)
+                ? (trim((string) ($profile['degree_details'] ?? '')) ?: null)
+                : null,
         ];
 
-        if ($schooling['is_student'] === 1) {
+        // A year level only means something for a student who is still an
+        // undergraduate (or who answered before attainment was asked).
+        if ($schooling['is_student'] === 1 && in_array($attainment, [null, 'undergraduate'], true)) {
             $yearLevel = (string) ($profile['student_year_level'] ?? '');
 
             $schooling['student_year_level'] = in_array($yearLevel, ReservistModel::STUDENT_YEAR_LEVELS, true)
@@ -75,7 +86,16 @@ class ReservistRegistrationService
             'current_rank_id'        => ! empty($profile['current_rank_id']) ? (int) $profile['current_rank_id'] : null,
             'date_of_enlistment'     => ! empty($profile['date_of_enlistment']) ? $profile['date_of_enlistment'] : null,
             'date_of_last_promotion' => ! empty($profile['date_of_last_promotion']) ? $profile['date_of_last_promotion'] : null,
-            'education_track_id'     => ! empty($profile['education_track_id']) ? (int) $profile['education_track_id'] : null,
+            'education_track_id'     => ! empty($profile['education_track_id'])
+                ? (int) $profile['education_track_id']
+                : $this->trackFor($attainment),
+        ];
+
+        $personal = [
+            'sex'            => in_array($profile['sex'] ?? null, ['male', 'female'], true) ? $profile['sex'] : null,
+            'date_of_birth'  => ! empty($profile['date_of_birth']) ? $profile['date_of_birth'] : null,
+            'contact_number' => trim((string) ($profile['contact_number'] ?? '')) ?: null,
+            'address'        => trim((string) ($profile['address'] ?? '')) ?: null,
         ];
 
         $existing = $serial !== '' ? $this->reservistModel->findByAfpSerialNumber($serial) : null;
@@ -101,14 +121,19 @@ class ReservistRegistrationService
                 'date_of_enlistment'     => $existing->date_of_enlistment?->toDateString() ?? $service['date_of_enlistment'],
                 'date_of_last_promotion' => $existing->date_of_last_promotion?->toDateString() ?? $service['date_of_last_promotion'],
                 'education_track_id'     => $existing->education_track_id ?? $service['education_track_id'],
+                'sex'                    => $existing->sex ?? $personal['sex'],
+                'date_of_birth'          => $existing->date_of_birth?->toDateString() ?? $personal['date_of_birth'],
+                'contact_number'         => $existing->contact_number ?? $personal['contact_number'],
+                'address'                => $existing->address ?? $personal['address'],
             ]));
 
             $this->assess($existing->id, (int) $user->id);
+            $this->welcome($user, $existing->current_rank_id ?? $service['current_rank_id'], (int) $existing->id);
 
             return $this->reservistModel->find($existing->id);
         }
 
-        $this->reservistModel->insert(array_merge($names, $schooling, $service, [
+        $this->reservistModel->insert(array_merge($names, $schooling, $service, $personal, [
             'user_id'                => (int) $user->id,
             'reservist_number'       => $this->nextReservistNumber($serial),
             'afp_serial_number'      => $serial !== '' ? $serial : null,
@@ -121,8 +146,73 @@ class ReservistRegistrationService
         $reservistId = (int) $this->reservistModel->getInsertID();
 
         $this->assess($reservistId, (int) $user->id);
+        $this->welcome($user, $service['current_rank_id'], $reservistId);
 
         return $this->reservistModel->find($reservistId);
+    }
+
+    /**
+     * The MLES column (Table 3) implied by the educational attainment
+     * answer: no college at all is the General track; any college --
+     * sign-up's year levels start at 2nd Year, so even an undergraduate has
+     * completed 1st year -- is the 1st Year College track. ROTC Professional
+     * means a *completed* advanced ROTC, which sign-up cannot tell, so the
+     * unit clerk sets that one on the record.
+     *
+     * Null when the matching track is not on file, which leaves the record
+     * exactly as it was before attainment was asked.
+     */
+    private function trackFor(?string $attainment): ?int
+    {
+        $code = match ($attainment) {
+            'none', 'others' => 'GENERAL',
+            'undergraduate', 'bachelor', 'masteral', 'doctorate' => 'COLLEGE_1STYR',
+            default => null,
+        };
+
+        if ($code === null) {
+            return null;
+        }
+
+        $track = model(\App\Models\EducationTrackModel::class)
+            ->where('track_code', $code)
+            ->where('is_active', 1)
+            ->first();
+
+        return $track !== null ? (int) $track['id'] : null;
+    }
+
+    /**
+     * Puts a first notification in the new account's bell, and -- for a
+     * Master Sergeant -- the client's notice that the next promotion is
+     * processed at the RCDG level, not through PromoTrack.
+     */
+    private function welcome(User $user, ?int $rankId, int $reservistId): void
+    {
+        $notifications = service('notificationService');
+
+        $notifications->notify(
+            (int) $user->id,
+            'welcome',
+            'Welcome to PromoTrack',
+            'Your reservist account is ready. Check My Profile, keep your ROTC progress up to date, '
+                . 'and upload your promotion documents under My Documents.',
+            'reservist',
+            $reservistId
+        );
+
+        $rank = $rankId !== null ? model(\App\Models\RankModel::class)->find($rankId) : null;
+
+        if (\App\Models\RankModel::isRcdgLevel($rank)) {
+            $notifications->notify(
+                (int) $user->id,
+                'rcdg_level',
+                'Promotion processed at RCDG level',
+                'Promotion for a Master Sergeant is processed at the RCDG level and cannot be applied for in PromoTrack.',
+                'reservist',
+                $reservistId
+            );
+        }
     }
 
     /**

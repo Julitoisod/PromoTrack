@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
     <meta name="csrf-header" content="<?= esc(csrf_header()) ?>">
     <title><?= esc($title ?? 'PromoTrack AFP-RF') ?></title>
+    <link rel="icon" type="image/png" href="<?= esc(base_url('assets/img/logo-parf-96.png')) ?>">
 
     <!-- Vendored locally rather than loaded from a CDN: Config/ContentSecurityPolicy
          restricts scripts and styles to 'self', and the system is expected to run on
@@ -22,10 +23,13 @@
     <!-- Application styles -->
     <link rel="stylesheet" href="<?= esc(base_url('assets/css/theme.css')) ?>">
     <link rel="stylesheet" href="<?= esc(base_url('assets/css/app.css')) ?>">
+    <!-- Reservist portal: dashboard banner, tiles, ROTC ladder, green side menu -->
+    <link rel="stylesheet" href="<?= esc(base_url('assets/css/portal.css')) ?>">
 
     <?= $this->renderSection('styles') ?>
 </head>
-<body>
+<?php $layoutUser = auth()->user(); ?>
+<body class="<?= $layoutUser !== null && $layoutUser->inGroup('reservist') ? 'portal' : '' ?>">
     <div class="page-loader" role="status" aria-live="polite">
         <div class="loader"></div>
         <p>please wait</p>

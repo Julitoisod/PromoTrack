@@ -15,7 +15,9 @@ use App\Models\ReservistModel;
 use App\Models\ReservistTrainingModel;
 use App\Models\TrainingTypeModel;
 use App\Models\UnitModel;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 use RuntimeException;
 
 /**
@@ -155,7 +157,41 @@ class ReservistsController extends BaseController
             'rankHistory'    => (new RankHistoryModel())->forReservist($reservist->id),
             'trainingTypes'  => (new TrainingTypeModel())->activeTrainingTypes(),
             'ranks'          => $this->rankModel->activeRanksOrdered(),
+
+            // The student's own ROTC ladder answers, read-only here.
+            'rotc'           => service('rotcProgressService')->summarize($reservist),
         ]);
+    }
+
+    /**
+     * Streams the reservist's profile photo for staff. Same route filters as
+     * show(): permission plus unit scope.
+     */
+    public function photo(?int $id = null): ResponseInterface
+    {
+        $reservist = $this->findAccessibleOrFail($id);
+        $path      = service('fileStorageService')->attachmentPath(ReservistPortalController::PHOTO_DIR, $reservist->profile_photo);
+
+        if ($path === null) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        return MyProfileController::imageResponse($this->response, $path);
+    }
+
+    /**
+     * Downloads a student reservist's E-4 justification letter for staff.
+     */
+    public function rotcJustification(?int $id = null): ResponseInterface
+    {
+        $reservist = $this->findAccessibleOrFail($id);
+        $row       = (new \App\Models\RotcProgressModel())->stagesFor($reservist->id)['E4'] ?? null;
+
+        if (($row['justification_path'] ?? null) === null) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        return MyRotcController::justificationResponse($this->response, $row);
     }
 
     /**
@@ -374,6 +410,8 @@ class ReservistsController extends BaseController
             'current_rank_id'         => $request->getPost('current_rank_id') ?: null,
             'date_of_last_promotion'  => $request->getPost('date_of_last_promotion') ?: null,
             'education_track_id'      => $request->getPost('education_track_id') ?: null,
+            'educational_attainment'  => $request->getPost('educational_attainment') ?: null,
+            'degree_details'          => trim((string) $request->getPost('degree_details')) ?: null,
             'is_student'              => $request->getPost('is_student') ? 1 : 0,
             // Dropped when the answer is "not a student", so a year level
             // can never linger against someone who has left school.

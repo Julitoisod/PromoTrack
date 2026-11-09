@@ -16,14 +16,18 @@ $currentPath = uri_string();
 $can         = static fn (?string $permission): bool => $permission === null
     || ($sidebarUser !== null && $sidebarUser->can($permission));
 
-// A reservist sees one screen: their own. The staff menu below is not
+// A reservist sees their own portal only. The staff menu below is not
 // merely hidden from them by permissions -- the dashboard entry carries no
 // permission at all, and its tiles count every package in the organization.
 $isReservist = $sidebarUser !== null && $sidebarUser->inGroup('reservist');
 
-$menu = $isReservist ? [
-    ['icon' => 'bi-person-vcard', 'label' => 'My Promotion', 'path' => 'my/promotion', 'perm' => 'promotions.view_own'],
-] : [
+if ($isReservist) {
+    echo view('components/sidebar_reservist', ['currentPath' => $currentPath]);
+
+    return;
+}
+
+$menu = [
     ['icon' => 'bi-speedometer2', 'label' => 'Dashboard', 'path' => '', 'perm' => null],
     ['icon' => 'bi-people', 'label' => 'Reservists', 'path' => 'reservists', 'perm' => 'reservists.view'],
 

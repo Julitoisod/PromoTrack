@@ -76,6 +76,25 @@ Do not hard-code one in a service or a validation rule.
   `Views/components/promotion_status.php`, which is the only place the four badges are defined.
 - **404 vs 403 on record access**: a record that exists but is not the caller's answers 404, so the
   response cannot be used to probe for ids. Unit-level refusals answer 403 from `UnitAccessFilter`.
+- **The reservist portal** (client revision of 2026-11-09) is `my/*`: Dashboard, My Profile, ROTC
+  Progress, My Documents (`my/promotion`), Notifications, Settings. Its controllers extend
+  `ReservistPortalController`, which resolves the record from the session — never an id in the URL.
+  The side menu is `Views/components/sidebar_reservist.php`; styles are in `public/assets/css/portal.css`.
+- **A reservist's unit is their CDC.** Sign-up lists `unit_type = 'cdc'` units (1501–1505, inserted by
+  the `AddStudentReservistFields` migration) and only that CDC's companies; `company_in_unit` enforces
+  it server-side. Assign an S1 clerk to the CDC unit for them to see those reservists.
+- **The student ROTC ladder (E1–E8)** is defined in `Config\RotcProgression` (labels, buttons) and
+  worked out in `RotcProgressService` (completion, blocking, cadet/reserve ranks, status card). It is
+  the student's own report: it never touches `reservists.current_rank_id`. Only enrolled
+  undergraduates (`Reservist::isStudentReservist()`) are on it; their year level sets the E-level.
+- **The education track is derived at sign-up** from the educational attainment
+  (`ReservistRegistrationService::trackFor`): none/others → General, any college → 1st Year College.
+  ROTC Professional is set by the clerk on the record.
+- **The login page** follows the client's mock-up of 2026-11-10. Its two photos
+  (`public/assets/img/login-salute.jpg`, `login-troops.jpg`) are crops of that mock-up image, seal
+  included; every word on the page is real HTML. Swap in official photos and seal when the client has them.
+- **Uploads that are not package documents** (profile photo, E-4 justification letter) go through
+  `FileStorageService::storeAttachment()` / `attachmentPath()` — same type sniffing, writable/ only.
 
 ## Gotchas found the hard way
 
@@ -89,6 +108,12 @@ Do not hard-code one in a service or a validation rule.
   exception, not `assertStatus(404)`.
 - Seeders are not idempotent; re-running `InitialSeeder` on a populated database fails on a duplicate
   unit code.
+- `appTimezone` is `Asia/Manila`. Under the old `UTC`, "today" lagged eight hours, so between midnight
+  and 8 AM a date entered as today failed `not_future_date` and time in grade read one day short.
+- Bootstrap compiles its own blue into `.btn-outline-primary`, links and form checks; `--bs-primary`
+  alone does not recolour them. The green overrides are at the end of `app.css`.
+- A sign-up `<select>` option the form has hidden (another CDC's company) can still be chosen by a
+  script; the UI test's `pick()` skips hidden options, and the server refuses the mismatch anyway.
 
 ## Not built yet
 
@@ -96,10 +121,8 @@ User management (`users.manage`) is still a disabled placeholder in the sidebar 
 created by seeder or by SQL (reservists create their own by signing up). Everything else in the design
 document's module table is implemented.
 
-`Admin\ReferenceDataController::SETS['units']` does not expose `parent_unit_id`, so a company added
-through Reference Data has no parent unit and shows without its "— Sample Reserve Unit A" suffix in
-the picker. It is otherwise fully functional. Seeded companies get their parent from
-`CompanyUnitsSeeder`.
+Staff can read a student's ROTC answers on the reservist profile but cannot correct or verify them
+there yet; the student edits them on their own ROTC Progress page.
 
 ## Open question for the client
 

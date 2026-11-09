@@ -104,8 +104,8 @@
     // Chart colours come from the palette in theme.css rather than being hard-coded,
     // so the charts cannot drift away from the rest of the brand.
     var palette = getComputedStyle(document.documentElement);
-    var brandBlue = palette.getPropertyValue('--pt-blue').trim() || '#1668dc';
-    var brandNavy = palette.getPropertyValue('--pt-navy').trim() || '#123a7a';
+    var brandPrimary = palette.getPropertyValue('--pt-primary').trim() || '#4b5d2a';
+    var brandDark = palette.getPropertyValue('--pt-dark').trim() || '#26361a';
 
     document.addEventListener('DOMContentLoaded', function () {
         var canvas = document.getElementById('packagePipelineChart');
@@ -124,7 +124,7 @@
                 datasets: [{
                     label: 'Packages',
                     data: data,
-                    backgroundColor: brandBlue,
+                    backgroundColor: brandPrimary,
                 }],
             },
             options: {
@@ -146,8 +146,8 @@
                     datasets: [{
                         label: 'Promotions issued',
                         data: <?= json_encode(array_values($promotionsByMonth)) ?>,
-                        borderColor: brandBlue,
-                        backgroundColor: 'rgba(22, 104, 220, 0.12)',
+                        borderColor: brandPrimary,
+                        backgroundColor: 'rgba(75, 93, 42, 0.12)',
                         fill: true,
                         tension: 0.25,
                         pointRadius: 3,
@@ -174,7 +174,7 @@
                     datasets: [{
                         label: 'Average days',
                         data: <?= json_encode(array_values($averageDaysInStatus)) ?>,
-                        backgroundColor: brandNavy,
+                        backgroundColor: brandDark,
                     }],
                 },
                 options: {

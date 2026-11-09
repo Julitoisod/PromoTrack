@@ -57,8 +57,19 @@ class PromotionPackagesController extends BaseController
 
         $status = $this->request->getGet('status');
 
+        // The side menu's stage links land here with ?status=; the page is
+        // titled after the link, so no separate "filtered by" chip is needed.
+        $title = match ($status) {
+            null, ''                   => 'Promotion Packages',
+            'ready_for_cdc_validation' => 'CDC Validation Queue',
+            'submitted_to_rcdg'        => 'RCDG Review Inbox',
+            'rcdg_endorsed'            => 'External Forwarding',
+            'approved'                 => 'Promotion Orders',
+            default                    => 'Promotion Packages: ' . ucwords(str_replace('_', ' ', (string) $status)),
+        };
+
         return view('packages/index', [
-            'title'       => 'Promotion Packages',
+            'title'       => $title,
             'packages'      => $this->promotionPackageModel
                 ->listQuery($unitScopedId, $status !== null ? [$status] : null)
                 ->paginate(self::PER_PAGE),
