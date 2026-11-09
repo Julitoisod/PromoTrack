@@ -112,6 +112,8 @@ Do not hard-code one in a service or a validation rule.
   and 8 AM a date entered as today failed `not_future_date` and time in grade read one day short.
 - Bootstrap compiles its own blue into `.btn-outline-primary`, links and form checks; `--bs-primary`
   alone does not recolour them. The green overrides are at the end of `app.css`.
+- The live host caches static files for a week (CDN and browser). Link local CSS/JS with
+  `asset_url()` (app/Common.php), which appends the file mtime, or a deploy reaches returning users days late.
 - A sign-up `<select>` option the form has hidden (another CDC's company) can still be chosen by a
   script; the UI test's `pick()` skips hidden options, and the server refuses the mismatch anyway.
 
