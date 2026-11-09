@@ -30,10 +30,13 @@
             <h2>Welcome back</h2>
         </div>
 
-        <?= view('auth/_panel', [
-            'lede' => 'Track your promotions, monitor your application status, '
-                . 'and stay updated with the PARF advancement process.',
-        ]) ?>
+        <?php // The intro gives way to a sign-in error so the card keeps its height. ?>
+        <?php if (session('error') === null && session('errors') === null && session('message') === null) : ?>
+            <?= view('auth/_panel', [
+                'lede' => 'Track your promotions, monitor your application status, '
+                    . 'and stay updated with the PARF advancement process.',
+            ]) ?>
+        <?php endif ?>
 
         <?= $this->include('auth/_alerts') ?>
 

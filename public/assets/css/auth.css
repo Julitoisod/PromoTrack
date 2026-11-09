@@ -126,8 +126,8 @@ body.auth-page {
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    min-height: 170px;
-    padding: 2rem 2.5rem 3.25rem;
+    min-height: 150px;
+    padding: 2rem 2.5rem;
     color: #fff;
     /* Shade for the title, the scene pinned right, the flat horizon tiled
        across the rest, and the dusk sky under all of it -- so the banner
@@ -198,11 +198,11 @@ body.auth-page {
     color: rgba(255, 255, 255, 0.88);
 }
 
-/* The form area overlaps the banner's lower edge, as in the mock-up. */
+/* The form starts below the banner. It used to overlap the banner's lower
+   edge like the mock-up, which read as the cards spilling out of place. */
 .auth-body {
     flex: 1;
-    margin-top: -1.75rem;
-    padding: 0 2rem 2.5rem;
+    padding: 1.5rem 2rem 2.5rem;
     position: relative;
 }
 
@@ -249,12 +249,15 @@ body.auth-page {
     margin-bottom: 0.3rem;
 }
 
+/* One box per field: the wrapper draws the border and the focus ring, the
+   input inside it draws nothing -- no border, no focus shadow, no autofill
+   tint -- so there is never a box inside the box. */
 .auth-field {
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    background: var(--pt-field);
-    border: 1px solid var(--pt-line);
+    background: #fff;
+    border: 1px solid #cfdccc;
     border-radius: 0.55rem;
     padding: 0.2rem 1rem;
     margin-bottom: 1rem;
@@ -266,11 +269,35 @@ body.auth-page {
     flex-shrink: 0;
 }
 
-.auth-field .form-control {
+.auth-field .form-control,
+.auth-field .form-control:focus {
     background: transparent;
     border: 0;
+    border-radius: 0;
     box-shadow: none;
+    outline: 0;
     padding: 0.6rem 0;
+}
+
+/* Chrome/Edge/Brave paint saved logins light blue in a box of their own;
+   an inset shadow in the field's white covers it. */
+.auth-field input:-webkit-autofill,
+.auth-field input:-webkit-autofill:hover,
+.auth-field input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    box-shadow: 0 0 0 1000px #fff inset;
+    -webkit-text-fill-color: var(--pt-ink);
+    caret-color: var(--pt-ink);
+    transition: background-color 9999s ease-out 0s;
+}
+
+/* A failed sign-in must not grow the card enough to push the page into a
+   scroll: the message is compact, and the intro gives way to it. */
+.auth-panel .alert {
+    padding: 0.55rem 0.85rem;
+    margin-bottom: 0.9rem;
+    border-radius: 0.55rem;
+    font-size: 0.86rem;
 }
 
 .auth-field:focus-within {
@@ -1052,5 +1079,75 @@ body.auth-page {
 
     .login-footer::after {
         display: none;
+    }
+}
+
+/* Short screens (laptops at 768px): tighten the login so it fits without a
+   scroll, error message included. */
+@media (min-width: 992px) and (max-height: 860px) {
+    .auth-shell-login .auth-hero {
+        padding-top: 0.7rem;
+        padding-bottom: 0.8rem;
+    }
+
+    .login-stage {
+        min-height: 0;
+        padding-top: 0.25rem;
+        padding-bottom: 3.3rem;
+    }
+
+    .login-stage .auth-panel {
+        margin: 0.3rem 0 0;
+        padding: 1.1rem 1.75rem;
+    }
+
+    .login-stage .auth-intro {
+        margin-bottom: 0.8rem;
+    }
+
+    .login-stage .auth-field {
+        margin-bottom: 0.7rem;
+    }
+
+    .login-stage .auth-meta {
+        margin-bottom: 0.9rem;
+    }
+
+    .login-stage .auth-submit,
+    .login-stage .auth-alt {
+        padding: 0.65rem;
+    }
+
+    .login-stage .auth-divider {
+        margin: 0.7rem 0;
+    }
+
+    .login-stage .auth-foot {
+        margin-top: 0.8rem;
+    }
+
+    .step-icon {
+        width: 3.4rem;
+        height: 3.4rem;
+        font-size: 1.5rem;
+    }
+
+    .login-steps li {
+        font-size: 1rem;
+    }
+
+    .login-steps li:not(:last-child)::after {
+        top: 1.7rem;
+        left: calc(50% + 2rem);
+        width: calc(100% - 4rem);
+    }
+
+    .login-footer {
+        height: 3.2rem;
+    }
+
+    .login-footer span {
+        bottom: 0.75rem;
+        font-size: 1.15rem;
     }
 }
