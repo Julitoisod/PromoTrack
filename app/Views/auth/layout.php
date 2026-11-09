@@ -14,8 +14,8 @@
           // sidebar rules, and app.css offsets the body by the navbar height. ?>
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/theme.css')) ?>">
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/auth.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(asset_url('assets/css/theme.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(asset_url('assets/css/auth.css')) ?>">
 
     <?= $this->renderSection('pageStyles') ?>
 </head>

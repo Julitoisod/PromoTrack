@@ -21,10 +21,10 @@
          element at runtime and style-src can stay at 'self'. -->
     <link rel="stylesheet" href="<?= esc(base_url('assets/vendor/sweetalert2/sweetalert2.min.css')) ?>">
     <!-- Application styles -->
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/theme.css')) ?>">
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(asset_url('assets/css/theme.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(asset_url('assets/css/app.css')) ?>">
     <!-- Reservist portal: dashboard banner, tiles, ROTC ladder, green side menu -->
-    <link rel="stylesheet" href="<?= esc(base_url('assets/css/portal.css')) ?>">
+    <link rel="stylesheet" href="<?= esc(asset_url('assets/css/portal.css')) ?>">
 
     <?= $this->renderSection('styles') ?>
 </head>
@@ -57,7 +57,7 @@
     <script src="<?= esc(base_url('assets/vendor/sweetalert2/sweetalert2.min.js')) ?>"></script>
     <!-- Application script -->
     <script {csp-script-nonce}>var baseUrl = <?= json_encode(base_url('/')) ?>;</script>
-    <script src="<?= esc(base_url('assets/js/app.js')) ?>"></script>
+    <script src="<?= esc(asset_url('assets/js/app.js')) ?>"></script>
 
     <?= $this->renderSection('scripts') ?>
 </body>

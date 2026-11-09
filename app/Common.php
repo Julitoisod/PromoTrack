@@ -13,3 +13,20 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+
+if (! function_exists('asset_url')) {
+    /**
+     * URL of a file under public/ with its modification time appended
+     * (`assets/css/app.css?v=1762800000`).
+     *
+     * The host serves static files with a week-long cache (CDN and browser),
+     * so without a version a deploy's CSS and JS reach returning users only
+     * days later. The query changes whenever the file does.
+     */
+    function asset_url(string $path): string
+    {
+        $file = FCPATH . ltrim($path, '/');
+
+        return base_url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+    }
+}

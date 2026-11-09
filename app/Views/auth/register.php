@@ -356,5 +356,5 @@
 
 <?= $this->section('pageScripts') ?>
 <?= $this->include('auth/_reveal') ?>
-<script src="<?= esc(base_url('assets/js/register.js')) ?>"></script>
+<script src="<?= esc(asset_url('assets/js/register.js')) ?>"></script>
 <?= $this->endSection() ?>
