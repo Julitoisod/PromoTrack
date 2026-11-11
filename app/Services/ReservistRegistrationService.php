@@ -88,7 +88,7 @@ class ReservistRegistrationService
             'date_of_last_promotion' => ! empty($profile['date_of_last_promotion']) ? $profile['date_of_last_promotion'] : null,
             'education_track_id'     => ! empty($profile['education_track_id'])
                 ? (int) $profile['education_track_id']
-                : $this->trackFor($attainment),
+                : $this->trackFor($attainment, $schooling['student_year_level'] ?? null),
         ];
 
         $personal = [
@@ -153,17 +153,21 @@ class ReservistRegistrationService
 
     /**
      * The MLES column (Table 3) implied by the educational attainment
-     * answer: no college at all is the General track; any college --
-     * sign-up's year levels start at 2nd Year, so even an undergraduate has
-     * completed 1st year -- is the 1st Year College track. ROTC Professional
+     * answer: no college at all is the General track, and so is an
+     * undergraduate still in 1st Year, who has not completed it yet; any
+     * other college is the 1st Year College track. ROTC Professional
      * means a *completed* advanced ROTC, which sign-up cannot tell, so the
      * unit clerk sets that one on the record.
      *
      * Null when the matching track is not on file, which leaves the record
      * exactly as it was before attainment was asked.
      */
-    private function trackFor(?string $attainment): ?int
+    private function trackFor(?string $attainment, ?string $yearLevel = null): ?int
     {
+        if ($attainment === 'undergraduate' && str_starts_with((string) $yearLevel, '1st Year')) {
+            $attainment = 'none';
+        }
+
         $code = match ($attainment) {
             'none', 'others' => 'GENERAL',
             'undergraduate', 'bachelor', 'masteral', 'doctorate' => 'COLLEGE_1STYR',

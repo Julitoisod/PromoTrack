@@ -242,6 +242,36 @@ async function studentPortal(browser, label) {
     await ctx.close();
 }
 
+// A 1st Year student (added 2026-11-11): signs up as an MS1 cadet, lands on
+// E-1, and shows up in the admin's MS1 folder.
+async function firstYearStudent(browser, adminPage, label) {
+    const ctx = await browser.createBrowserContext();
+    const page = await ctx.newPage();
+    await page.setViewport({ width: 1440, height: 900 });
+    const push = (step, expect, badge) => results.push({ path: `1st Year student: ${step}`, label, expect, badge });
+    const serial = `FY${STAMP}`;
+
+    await fillSignUp(page, {
+        first: 'Fresh', last: 'Yearone', serial,
+        email: `fresh${STAMP}@promotrack.local`, username: `fresh${STAMP}`,
+        rankCategory: 'rotc', rank: 'MS1', attainment: 'undergraduate', yearLevel: '1st Year 1st Sem', isStudent: true,
+        enlistedMonthsAgo: 3,
+    });
+    await submit(page, 'button.reg-submit');
+    await page.goto(`${BASE}/my/rotc`, { waitUntil: 'networkidle0' });
+    await settle(page);
+    const level = await page.evaluate(() => [...document.querySelectorAll('span')].find((s) => s.textContent.trim() === 'Current Level')?.nextElementSibling?.innerText.trim());
+    await page.screenshot({ path: `${OUT}/${label}-rotc.png`, fullPage: true });
+    push('ROTC page level', 'E-1 · 1st Year 1st Sem', level);
+    await ctx.close();
+
+    await adminPage.goto(`${BASE}/admin/enrollment/MS1?q=${serial}`, { waitUntil: 'networkidle0' });
+    await settle(adminPage);
+    const found = await adminPage.evaluate((s) => [...document.querySelectorAll('tbody tr')].some((tr) => tr.innerText.includes(s)), serial);
+    await adminPage.screenshot({ path: `${OUT}/${label}-ms1.png`, fullPage: true });
+    push('listed in the MS1 folder', 'yes', found ? 'yes' : 'no');
+}
+
 // Picking Master Sergeant pops the client's RCDG-level notice.
 async function masterSergeantNotice(browser, label) {
     const ctx = await browser.createBrowserContext();
@@ -281,11 +311,12 @@ try {
     await signUp(browser, '6-signup-eligible', { rank: 'Private First Class', monthsInGrade: 36, expect: 'Eligible' });
     await studentPortal(browser, '7-student-portal');
     await masterSergeantNotice(browser, '8-msg-notice');
+    await firstYearStudent(browser, page, '9-first-year');
     }
 } finally {
     await browser.close();
     console.log(JSON.stringify(results, null, 2));
-    const expected = process.env.REASSESS ? process.env.REASSESS.split(',').length : (process.argv[4] ? 6 : 5) + (process.env.REASSESS ? 0 : 12);
+    const expected = process.env.REASSESS ? process.env.REASSESS.split(',').length : (process.argv[4] ? 6 : 5) + (process.env.REASSESS ? 0 : 14);
     const ok = results.length === expected
         && results.every((r) => r.badge === r.expect && (r.listBadge === undefined || r.listBadge === r.expect));
     console.log(ok ? `ALL ${results.length} UI CASES MATCH` : 'MISMATCH — see above');

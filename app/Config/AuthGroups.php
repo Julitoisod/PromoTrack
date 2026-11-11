@@ -116,6 +116,8 @@ class AuthGroups extends ShieldAuthGroups
         'audit_logs.view'              => 'View system audit logs',
         'settings.manage'              => 'Manage system settings',
         'backups.manage'               => 'Create and manage database backups',
+        'companies.manage'             => 'Add and edit the companies offered under each CDC at sign-up',
+        'enrollment.manage'            => 'View student enrollment and reservist classification, verify CORs, assign Standby / Ready Reserve',
     ];
 
     /**
@@ -143,10 +145,14 @@ class AuthGroups extends ShieldAuthGroups
             'audit_logs.*',
             'settings.*',
             'backups.*',
+            'companies.*',
+            'enrollment.*',
         ],
         'system_administrator' => [
             'users.manage',
             'units.manage',
+            'companies.manage',
+            'enrollment.manage',
             'rules.manage',
             'reservists.view',
             'reports.view',
@@ -171,8 +177,13 @@ class AuthGroups extends ShieldAuthGroups
             'reports.view',
             'reports.generate',
         ],
+        // companies.manage / enrollment.manage: the client asked that the CDC
+        // side, not only an administrator, can maintain the sign-up companies
+        // and work the admin panel's enrollment and classification folders.
         'cdc_administrator' => [
             'reservists.view',
+            'companies.manage',
+            'enrollment.manage',
             'assessments.verify',
             'packages.validate_at_cdc',
             'packages.submit_to_rcdg',

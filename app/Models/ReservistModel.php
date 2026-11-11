@@ -29,13 +29,15 @@ class ReservistModel extends Model
 
     /**
      * Year levels offered when a reservist is still studying. Per the
-     * client revision of 2026-11-09 these are semesters, starting at 2nd
-     * Year 1st Sem: a 1st-year student is still basic ROTC, not yet a
-     * reservist. Each maps to an E-level in Config\RotcProgression.
+     * client revision of 2026-11-09 these are semesters; the 1st Year ones
+     * were added on 2026-11-11 so the MS1 and MS2 enrollment folders fill.
+     * Each maps to an E-level in Config\RotcProgression.
      *
      * @var list<string>
      */
     public const STUDENT_YEAR_LEVELS = [
+        '1st Year 1st Sem',
+        '1st Year 2nd Sem',
         '2nd Year 1st Sem',
         '2nd Year 2nd Sem',
         '3rd Year 1st Sem',
@@ -80,9 +82,26 @@ class ReservistModel extends Model
      * Resolves to NULL -- displayed as "Pending" -- while no assessment
      * has been run for them yet.
      */
-    private const LATEST_PROMOTION_STATUS_SQL =
+    public const LATEST_PROMOTION_STATUS_SQL =
         '(SELECT pa.promotion_status FROM promotion_assessments pa'
         . ' WHERE pa.reservist_id = reservists.id ORDER BY pa.id DESC LIMIT 1)';
+
+    /**
+     * Standby / Ready Reserve as the admin panel counts it: what an
+     * administrator assigned, otherwise the latest classification the
+     * student reported on their ROTC ladder (stage codes E1-E8 sort as text).
+     */
+    public const CLASSIFICATION_SQL =
+        'COALESCE(reservists.reserve_classification,'
+        . ' (SELECT rp.classification FROM rotc_progress rp WHERE rp.reservist_id = reservists.id'
+        . ' AND rp.classification IS NOT NULL ORDER BY rp.stage DESC LIMIT 1))';
+
+    /**
+     * A student reservist in SQL, matching Reservist::isStudentReservist().
+     */
+    // COALESCE so a record with no attainment (older data) is "not a student"
+    // rather than NULL, which NOT (...) would drop from both lists.
+    public const STUDENT_SQL = "(reservists.is_student = 1 AND COALESCE(reservists.educational_attainment, '') = 'undergraduate')";
 
     protected $allowedFields = [
         'user_id',
@@ -102,6 +121,9 @@ class ReservistModel extends Model
         'degree_details',
         'is_student',
         'student_year_level',
+        'reserve_classification',
+        'classification_updated_by',
+        'classification_updated_at',
         'organizational_unit_id',
         'company_unit_id',
         'contact_number',
@@ -138,6 +160,7 @@ class ReservistModel extends Model
         'student_year_level' => 'permit_empty',
         'educational_attainment' => 'permit_empty|in_list[none,undergraduate,bachelor,masteral,doctorate,others]',
         'degree_details'    => 'permit_empty|max_length[150]',
+        'reserve_classification' => 'permit_empty|in_list[standby,ready_reserve]',
         'organizational_unit_id' => 'permit_empty|is_natural_no_zero',
         'company_unit_id'   => 'permit_empty|is_natural_no_zero|is_not_unique[organizational_units.id]',
         'user_id'           => 'permit_empty|is_natural_no_zero|is_unique[reservists.user_id,id,{id}]',
@@ -228,6 +251,104 @@ class ReservistModel extends Model
         }
 
         return $builder->orderBy('reservists.last_name', 'ASC');
+    }
+
+    /**
+     * The admin panel's reservist lists (registrations, semester folders,
+     * classification folders, regular reservists), returned unexecuted so
+     * the caller can paginate() it.
+     *
+     * Filters (all optional): q (name / serial / reservist number), cdc,
+     * company, student (true = student reservists, false = everyone else),
+     * year_level, classification (standby / ready_reserve), registered
+     * (true = only records an account signed up for).
+     *
+     * @param array<string, mixed> $filters
+     */
+    public function directoryQuery(array $filters = []): self
+    {
+        $builder = $this->select(
+            'reservists.*, ranks.rank_name AS rank_name, cdc.unit_name AS cdc_name, company.unit_name AS company_name'
+        )
+            ->select(self::CLASSIFICATION_SQL . ' AS classification', false)
+            ->join('ranks', 'ranks.id = reservists.current_rank_id', 'left')
+            ->join('organizational_units AS cdc', 'cdc.id = reservists.organizational_unit_id', 'left')
+            ->join('organizational_units AS company', 'company.id = reservists.company_unit_id', 'left')
+            ->where('reservists.deleted_at', null);
+
+        $q = trim((string) ($filters['q'] ?? ''));
+
+        if ($q !== '') {
+            $builder->groupStart()
+                ->like('reservists.last_name', $q)
+                ->orLike('reservists.first_name', $q)
+                ->orLike('reservists.afp_serial_number', $q)
+                ->orLike('reservists.reservist_number', $q)
+                ->groupEnd();
+        }
+
+        if (! empty($filters['cdc'])) {
+            $builder->where('reservists.organizational_unit_id', (int) $filters['cdc']);
+        }
+
+        if (! empty($filters['company'])) {
+            $builder->where('reservists.company_unit_id', (int) $filters['company']);
+        }
+
+        if (array_key_exists('student', $filters) && $filters['student'] !== null) {
+            $builder->where($filters['student'] ? self::STUDENT_SQL : 'NOT ' . self::STUDENT_SQL, null, false);
+        }
+
+        if (! empty($filters['year_level'])) {
+            $builder->where('reservists.student_year_level', (string) $filters['year_level']);
+        }
+
+        // Only the two known values reach the raw SQL.
+        if (in_array($filters['classification'] ?? null, ['standby', 'ready_reserve'], true)) {
+            $builder->where(self::CLASSIFICATION_SQL . " = '" . $filters['classification'] . "'", null, false);
+        }
+
+        if (! empty($filters['registered'])) {
+            $builder->where('reservists.user_id IS NOT NULL', null, false);
+        }
+
+        return $builder;
+    }
+
+    /**
+     * Headline counts for the admin dashboard.
+     *
+     * @return array{registrants: int, students: int, regular: int, standby: int, ready_reserve: int}
+     */
+    public function adminCounts(): array
+    {
+        $count = fn (array $filters): int => $this->directoryQuery($filters)->countAllResults();
+
+        return [
+            'registrants'   => $count(['registered' => true]),
+            'students'      => $count(['student' => true]),
+            'regular'       => $count(['student' => false]),
+            'standby'       => $count(['classification' => 'standby']),
+            'ready_reserve' => $count(['classification' => 'ready_reserve']),
+        ];
+    }
+
+    /**
+     * Number of student reservists at each year level.
+     *
+     * @return array<string, int>
+     */
+    public function studentCountsByYearLevel(): array
+    {
+        $rows = $this->builder()
+            ->select('student_year_level, COUNT(*) AS total')
+            ->where('deleted_at', null)
+            ->where(self::STUDENT_SQL, null, false)
+            ->groupBy('student_year_level')
+            ->get()
+            ->getResultArray();
+
+        return array_column($rows, 'total', 'student_year_level');
     }
 
     /**

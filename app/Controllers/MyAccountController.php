@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ChangesPassword;
 use App\Models\NotificationModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -12,6 +13,8 @@ use CodeIgniter\HTTP\RedirectResponse;
  */
 class MyAccountController extends ReservistPortalController
 {
+    use ChangesPassword;
+
     public function notifications(): string
     {
         $user  = $this->currentUser();
@@ -40,43 +43,8 @@ class MyAccountController extends ReservistPortalController
         ]);
     }
 
-    /**
-     * Changes the signed-in account's password. The current password is
-     * checked first, and the new one goes through the same Shield password
-     * validators as sign-up (length, nothing personal, not a common word).
-     */
     public function changePassword(): RedirectResponse
     {
-        $user = $this->currentUser();
-
-        $rules = [
-            'current_password' => ['label' => 'Current Password', 'rules' => 'required'],
-            'password'         => ['label' => 'New Password', 'rules' => 'required|max_byte[72]|strong_password[]'],
-            'password_confirm' => ['label' => 'Repeat New Password', 'rules' => 'required|matches[password]'],
-        ];
-
-        if (! $this->validate($rules)) {
-            return redirect()->to(site_url('my/settings'))
-                ->with('errors', $this->validator->getErrors())
-                ->with('error', 'Your password was not changed. Please check the fields below.');
-        }
-
-        $check = auth('session')->check([
-            'email'    => $user->email,
-            'password' => (string) $this->request->getPost('current_password'),
-        ]);
-
-        if (! $check->isOK()) {
-            return redirect()->to(site_url('my/settings'))
-                ->with('errors', ['current_password' => 'The current password is not correct.'])
-                ->with('error', 'Your password was not changed.');
-        }
-
-        $user->fill(['password' => (string) $this->request->getPost('password')]);
-        auth()->getProvider()->save($user);
-
-        service('auditLogService')->record((int) $user->id, 'user.password_changed', 'user', (int) $user->id);
-
-        return redirect()->to(site_url('my/settings'))->with('success', 'Your password has been changed.');
+        return $this->changePasswordAndReturnTo(site_url('my/settings'));
     }
 }

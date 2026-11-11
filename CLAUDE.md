@@ -82,14 +82,24 @@ Do not hard-code one in a service or a validation rule.
   The side menu is `Views/components/sidebar_reservist.php`; styles are in `public/assets/css/portal.css`.
 - **A reservist's unit is their CDC.** Sign-up lists `unit_type = 'cdc'` units (1501–1505, inserted by
   the `AddStudentReservistFields` migration) and only that CDC's companies; `company_in_unit` enforces
-  it server-side. Assign an S1 clerk to the CDC unit for them to see those reservists.
+  it server-side. Assign an S1 clerk to the CDC unit for them to see those reservists. Companies are
+  added, renamed, moved and hidden on `admin/companies` (`companies.manage`: superadmin, system
+  administrator, CDC administrator); one with reservists cannot change CDC.
 - **The student ROTC ladder (E1–E8)** is defined in `Config\RotcProgression` (labels, buttons) and
   worked out in `RotcProgressService` (completion, blocking, cadet/reserve ranks, status card). It is
   the student's own report: it never touches `reservists.current_rank_id`. Only enrolled
   undergraduates (`Reservist::isStudentReservist()`) are on it; their year level sets the E-level.
+- **The admin panel** (client brief of 2026-11-10, permission `enrollment.manage`: superadmin, system
+  administrator, CDC administrator): the dashboard shows headline counts plus semester folders
+  (`Config\RotcProgression::$enrollmentFolders`, MS1-MS42 by year level) and Standby / Ready Reserve
+  folders. `Admin\EnrollmentController` lists a folder and verifies the student's COR
+  (`student_enrollments`, one row per reservist per year level, uploaded on ROTC Progress);
+  `Admin\ReservistAdminController` does Registrations, Regular Reservists and classification.
+  Classification = `reservists.reserve_classification` if an admin set it, else the student's latest
+  ROTC answer (`ReservistModel::CLASSIFICATION_SQL`). Lists use `ReservistModel::directoryQuery()`.
 - **The education track is derived at sign-up** from the educational attainment
-  (`ReservistRegistrationService::trackFor`): none/others → General, any college → 1st Year College.
-  ROTC Professional is set by the clerk on the record.
+  (`ReservistRegistrationService::trackFor`): none/others → General, an undergraduate still in
+  1st Year (MS1/MS2) → General, any other college → 1st Year College. ROTC Professional is set by the clerk on the record.
 - **The login page** follows the client's mock-up of 2026-11-10. Its two photos
   (`public/assets/img/login-salute.jpg`, `login-troops.jpg`) are crops of that mock-up image, seal
   included; every word on the page is real HTML. Swap in official photos and seal when the client has them.

@@ -63,6 +63,8 @@ final class RotcProgressServiceTest extends CIUnitTestCase
 
     public function testTheYearLevelSetsTheELevel(): void
     {
+        $this->assertSame('E1', $this->service->currentStage($this->student('1st Year 1st Sem')));
+        $this->assertSame('E2', $this->service->currentStage($this->student('1st Year 2nd Sem')));
         $this->assertSame('E3', $this->service->currentStage($this->student('2nd Year 1st Sem')));
         $this->assertSame('E4', $this->service->currentStage($this->student('2nd Year 2nd Sem')));
         $this->assertSame('E8', $this->service->currentStage($this->student('4th Year 2nd Sem')));

@@ -57,6 +57,15 @@ class Home extends BaseController
             // are promotions moving, and where do packages get stuck.
             'promotionsByMonth'   => $orderModel->monthlyTotals($unitScopedId),
             'averageDaysInStatus' => $historyModel->averageDaysInStatus($unitScopedId),
+
+            // Admin panel (client brief of 2026-11-10): headline counts and
+            // the semester / classification folders, for those who work them.
+            'admin'               => $user !== null && $user->can('enrollment.manage')
+                ? [
+                    'counts'  => (new \App\Models\ReservistModel())->adminCounts(),
+                    'folders' => \App\Controllers\Admin\EnrollmentController::folders(),
+                ]
+                : null,
         ]);
     }
 }

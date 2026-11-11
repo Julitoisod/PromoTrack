@@ -26,8 +26,8 @@ class RotcProgression extends BaseConfig
 {
     /**
      * Year level as stored in `reservists.student_year_level` => stage code.
-     * Sign-up starts at 2nd Year 1st Sem; E1 and E2 are the basic-ROTC
-     * semesters every student reservist has already been through.
+     * Sign-up offers every semester from 1st Year 1st Sem (E1) to 4th
+     * Year 2nd Sem (E8).
      *
      * @var array<string, string>
      */
@@ -70,6 +70,21 @@ class RotcProgression extends BaseConfig
         'gs_3_2' => '3rd Year 2nd Sem',
         'gs_4_1' => '4th Year 1st Sem',
         'gs_4_2' => '4th Year 2nd Sem',
+    ];
+
+    /**
+     * The admin panel's semester folders (client brief of 2026-11-10):
+     * folder => the year level whose students it lists.
+     *
+     * @var array<string, string>
+     */
+    public array $enrollmentFolders = [
+        'MS1'  => '1st Year 1st Sem',
+        'MS2'  => '1st Year 2nd Sem',
+        'MS31' => '2nd Year 1st Sem',
+        'MS32' => '2nd Year 2nd Sem',
+        'MS41' => '3rd Year 1st Sem',
+        'MS42' => '3rd Year 2nd Sem',
     ];
 
     /**

@@ -341,6 +341,35 @@ final class ReservistRegistrationTest extends CIUnitTestCase
         ]);
     }
 
+    /**
+     * A 1st Year student can sign up (MS1 / MS2), but has not completed
+     * 1st Year College yet, so they are assessed on the General track.
+     */
+    public function testAFirstYearStudentSignsUpOnTheGeneralTrack(): void
+    {
+        $generalTrackId = $this->insertRow('education_tracks', [
+            'track_code' => 'GENERAL',
+            'track_name' => 'General',
+            'is_active'  => 1,
+        ]);
+        $this->insertRow('education_tracks', [
+            'track_code' => 'COLLEGE_1STYR',
+            'track_name' => 'Completed 1st Year College',
+            'is_active'  => 1,
+        ]);
+
+        $this->signUp(['education_track_id' => '', 'student_year_level' => '1st Year 1st Sem']);
+
+        $user = auth()->getProvider()->findByCredentials(['email' => 'juan@promotrack.local']);
+
+        $this->assertNotNull($user, 'A 1st Year student should be able to sign up.');
+        $this->seeInDatabase('reservists', [
+            'user_id'            => $user->id,
+            'student_year_level' => '1st Year 1st Sem',
+            'education_track_id' => $generalTrackId,
+        ]);
+    }
+
     public function testThePersonalDetailsFromTheFormAreStoredOnTheRecord(): void
     {
         $this->signUp(['educational_attainment' => 'bachelor', 'degree_details' => 'BS Information Technology', 'is_student' => '0']);

@@ -71,6 +71,36 @@
             });
         }
 
+        // Show / Hide for values masked as dots (username, email on Account
+        // Settings) and for password inputs.
+        document.addEventListener('click', function (event) {
+            var maskButton = event.target.closest('.mask-toggle');
+
+            if (maskButton) {
+                var masked = document.getElementById(maskButton.dataset.maskTarget);
+                var shown = maskButton.getAttribute('aria-pressed') === 'true';
+
+                masked.querySelector('.masked-dots').classList.toggle('d-none', !shown);
+                masked.querySelector('.masked-real').classList.toggle('d-none', shown);
+                maskButton.setAttribute('aria-pressed', shown ? 'false' : 'true');
+                maskButton.querySelector('i').className = shown ? 'bi bi-eye' : 'bi bi-eye-slash';
+                maskButton.querySelector('span').textContent = shown ? 'Show' : 'Hide';
+                return;
+            }
+
+            var passwordButton = event.target.closest('.password-toggle');
+
+            if (passwordButton) {
+                var field = document.getElementById(passwordButton.dataset.passwordTarget);
+                var visible = field.type === 'text';
+
+                field.type = visible ? 'password' : 'text';
+                passwordButton.setAttribute('aria-pressed', visible ? 'false' : 'true');
+                passwordButton.title = visible ? 'Show password' : 'Hide password';
+                passwordButton.querySelector('i').className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+            }
+        });
+
         // Auto-dismiss confirmation prompts on any element carrying
         // data-confirm="Message to show before submit".
         document.querySelectorAll('[data-confirm]').forEach(function (element) {

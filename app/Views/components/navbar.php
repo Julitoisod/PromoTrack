@@ -52,6 +52,11 @@ if ($navUser !== null && $navUser->inGroup('reservist')) {
                     </span></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
+                        <a class="dropdown-item" href="<?= esc(site_url($navUser->inGroup('reservist') ? 'my/settings' : 'account/settings')) ?>">
+                            <i class="bi bi-person-gear me-1"></i> Account Settings
+                        </a>
+                    </li>
+                    <li>
                         <a class="dropdown-item" href="<?= esc(route_to('logout')) ?>">
                             <i class="bi bi-box-arrow-right me-1"></i> Logout
                         </a>

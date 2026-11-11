@@ -558,3 +558,226 @@
     width: auto;
     vertical-align: middle;
 }
+
+/* ---------- Admin panel (client brief of 2026-11-10) ---------- */
+
+.admin-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1.5rem 1.75rem;
+    border-radius: 1.1rem;
+    color: #fff;
+    background:
+        linear-gradient(90deg, rgba(8, 38, 17, 0.95) 0%, rgba(8, 38, 17, 0.7) 45%, rgba(8, 38, 17, 0) 75%),
+        url("../img/hero-soldiers.svg") right bottom / auto 100% no-repeat,
+        url("../img/hero-ground.svg") left bottom / auto 100% repeat-x,
+        var(--pt-sky);
+    box-shadow: var(--pt-shadow);
+}
+
+.admin-hero h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+.admin-hero-sub {
+    margin: 0.2rem 0 0;
+    font-weight: 600;
+    color: var(--pt-gold);
+}
+
+.admin-hero-date {
+    padding: 0.45rem 0.9rem;
+    border-radius: 2rem;
+    background: rgba(0, 0, 0, 0.3);
+    font-size: 0.9rem;
+}
+
+a.admin-stat {
+    display: block;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+a.admin-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pt-shadow);
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.section-head h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--pt-dark);
+}
+
+/* Folder cards: a big folder icon says "this opens another page". */
+.folder-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    height: 100%;
+    padding: 1.1rem 1.15rem 1rem;
+    border: 1px solid var(--pt-line);
+    border-radius: 1rem;
+    background: #fff;
+    color: var(--pt-ink);
+    text-decoration: none;
+    box-shadow: var(--pt-shadow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.folder-card:hover,
+.folder-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--pt-gold);
+    box-shadow: 0 0.8rem 1.6rem rgba(16, 64, 27, 0.16);
+    color: var(--pt-ink);
+}
+
+.folder-icon {
+    position: relative;
+    display: inline-flex;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: var(--pt-gold);
+    filter: drop-shadow(0 0.2rem 0.3rem rgba(160, 115, 10, 0.3));
+}
+
+.folder-icon-lg {
+    font-size: 2.4rem;
+}
+
+.folder-name {
+    margin-top: 0.35rem;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--pt-dark);
+}
+
+.folder-count {
+    font-size: 0.92rem;
+}
+
+.folder-count strong {
+    font-size: 1.05rem;
+    color: var(--pt-primary);
+}
+
+.folder-level {
+    font-size: 0.78rem;
+    color: var(--pt-muted);
+}
+
+.folder-flag {
+    margin-top: 0.3rem;
+}
+
+.folder-open {
+    margin-top: auto;
+    padding-top: 0.6rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--pt-primary);
+}
+
+.folder-card-wide {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.4rem 1.6rem;
+}
+
+.folder-card-wide .folder-icon {
+    font-size: 4.2rem;
+}
+
+.folder-card-wide .folder-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.folder-card-wide .folder-name {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.folder-badge-icon {
+    position: absolute;
+    right: 0.35em;
+    bottom: 0.3em;
+    font-size: 0.38em;
+    color: var(--pt-dark);
+}
+
+.folder-ready_reserve {
+    border-left: 5px solid #2f9a48;
+}
+
+.folder-standby {
+    border-left: 5px solid #d39220;
+}
+
+.badge-standby {
+    background: #fdf0d5;
+    color: #8a5a05;
+}
+
+.breadcrumb a {
+    color: var(--pt-primary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.admin-filters .input-group-text {
+    background: var(--pt-field);
+}
+
+/* Logout at the foot of the staff side menu. */
+.sidebar-logout {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--pt-line);
+}
+
+/* Account Settings: values masked as dots with a Show/Hide link. */
+.account-list dd {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.masked-dots {
+    letter-spacing: 0.15em;
+}
+
+.mask-toggle {
+    padding: 0 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--pt-primary);
+}
+
+.mask-toggle:hover {
+    text-decoration: underline;
+}

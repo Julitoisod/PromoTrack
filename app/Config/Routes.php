@@ -35,11 +35,20 @@ $routes->group('my', ['filter' => ['session', 'permission:promotions.view_own']]
     $routes->get('rotc', 'MyRotcController::index');
     $routes->post('rotc/(E[1-8])', 'MyRotcController::save/$1');
     $routes->get('rotc/justification', 'MyRotcController::justification');
+    $routes->post('cor', 'MyRotcController::uploadCor');
+    $routes->get('cor', 'MyRotcController::cor');
     $routes->get('notifications', 'MyAccountController::notifications');
     $routes->post('notifications/read-all', 'MyAccountController::markAllRead');
     $routes->get('settings', 'MyAccountController::settings');
     $routes->post('settings/password', 'MyAccountController::changePassword');
 });
+
+// Staff Account Settings: the signed-in account's own username, email and
+// password. Session only -- every staff role has one, and the controller
+// touches nothing but the account in the session (reservists are sent to
+// my/settings).
+$routes->get('account/settings', 'AccountController::settings', ['filter' => 'session']);
+$routes->post('account/settings/password', 'AccountController::changePassword', ['filter' => 'session']);
 
 $routes->group('reservists', ['filter' => 'session'], static function (RouteCollection $routes): void {
     $routes->get('/', 'ReservistsController::index', ['filter' => 'permission:reservists.view']);
@@ -149,6 +158,25 @@ $routes->group('admin', ['filter' => 'session'], static function (RouteCollectio
 
     // Versioned promotion rules. A threshold change inserts a new version and
     // expires the old one; see Admin\PromotionRulesController::storeVersion().
+    // Admin panel (client brief of 2026-11-10): semester folders, COR
+    // verification, registrations, regular reservists, Standby / Ready Reserve.
+    $routes->get('enrollment', 'Admin\EnrollmentController::index', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('enrollment/(MS1|MS2|MS31|MS32|MS41|MS42)', 'Admin\EnrollmentController::folder/$1', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('enrollment/cor/(:num)', 'Admin\EnrollmentController::cor/$1', ['filter' => 'permission:enrollment.manage']);
+    $routes->post('enrollment/cor/(:num)/verify', 'Admin\EnrollmentController::verify/$1', ['filter' => 'permission:enrollment.manage']);
+    $routes->post('enrollment/cor/(:num)/reject', 'Admin\EnrollmentController::reject/$1', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('registrations', 'Admin\ReservistAdminController::registrations', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('regular-reservists', 'Admin\ReservistAdminController::regular', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('classification', 'Admin\ReservistAdminController::classification', ['filter' => 'permission:enrollment.manage']);
+    $routes->get('classification/(standby|ready_reserve)', 'Admin\ReservistAdminController::classificationList/$1', ['filter' => 'permission:enrollment.manage']);
+    $routes->post('classification/reservist/(:num)', 'Admin\ReservistAdminController::updateClassification/$1', ['filter' => 'permission:enrollment.manage']);
+
+    // The companies offered under each CDC at sign-up; CDC administrators too.
+    $routes->get('companies', 'Admin\CompaniesController::index', ['filter' => 'permission:companies.manage']);
+    $routes->post('companies', 'Admin\CompaniesController::store', ['filter' => 'permission:companies.manage']);
+    $routes->post('companies/(:num)', 'Admin\CompaniesController::update/$1', ['filter' => 'permission:companies.manage']);
+    $routes->post('companies/(:num)/toggle', 'Admin\CompaniesController::toggle/$1', ['filter' => 'permission:companies.manage']);
+
     $routes->get('rules', 'Admin\PromotionRulesController::index', ['filter' => 'permission:rules.manage']);
     $routes->post('rules', 'Admin\PromotionRulesController::store', ['filter' => 'permission:rules.manage']);
     $routes->get('rules/(:num)', 'Admin\PromotionRulesController::show/$1', ['filter' => 'permission:rules.manage']);

@@ -29,6 +29,14 @@ if ($isReservist) {
 
 $menu = [
     ['icon' => 'bi-speedometer2', 'label' => 'Dashboard', 'path' => '', 'perm' => null],
+
+    // Admin panel (client brief of 2026-11-10).
+    ['icon' => 'bi-person-plus', 'label' => 'Registrations', 'path' => 'admin/registrations', 'perm' => 'enrollment.manage'],
+    ['icon' => 'bi-mortarboard', 'label' => 'Student Reservist Enrollment', 'path' => 'admin/enrollment', 'perm' => 'enrollment.manage'],
+    ['icon' => 'bi-shield-check', 'label' => 'Standby / Ready Reserve', 'path' => 'admin/classification', 'perm' => 'enrollment.manage'],
+    ['icon' => 'bi-people-fill', 'label' => 'Regular Reservists', 'path' => 'admin/regular-reservists', 'perm' => 'enrollment.manage'],
+    ['icon' => 'bi-buildings', 'label' => 'Company Management', 'path' => 'admin/companies', 'perm' => 'companies.manage'],
+
     ['icon' => 'bi-people', 'label' => 'Reservists', 'path' => 'reservists', 'perm' => 'reservists.view'],
 
     ['group' => 'Promotion Management', 'id' => 'navPromotion', 'items' => [
@@ -59,12 +67,28 @@ $menu = [
 $currentQuery = service('request')->getUri()->getQuery();
 $currentUri   = $currentQuery === '' ? $currentPath : $currentPath . '?' . $currentQuery;
 
-$isCurrent = static function (array $item) use ($currentPath, $currentUri): bool {
+// Whether some menu entry is exactly this URI, query included.
+$menuPaths = [];
+array_walk_recursive($menu, static function ($value, $key) use (&$menuPaths): void {
+    if ($key === 'path' && $value !== null) {
+        $menuPaths[] = $value;
+    }
+});
+$exactEntry = in_array($currentUri, $menuPaths, true);
+
+$isCurrent = static function (array $item) use ($currentPath, $currentUri, $exactEntry): bool {
     if ($item['path'] === null) {
         return false;
     }
 
     if ($item['path'] === $currentUri) {
+        return true;
+    }
+
+    // A plain link stays lit when the page adds its own filter query
+    // (admin/companies?cdc=12) -- unless another entry is that exact URI,
+    // as the stage links under Promotion Management are.
+    if (! $exactEntry && $item['path'] !== '' && ! str_contains((string) $item['path'], '?') && $item['path'] === $currentPath) {
         return true;
     }
 
@@ -136,6 +160,18 @@ $isCurrent = static function (array $item) use ($currentPath, $currentUri): bool
                     </ul>
                 </li>
             <?php endforeach; ?>
+            <li class="nav-item sidebar-logout">
+                <a class="nav-link <?= $currentPath === 'account/settings' ? 'active' : '' ?>" href="<?= esc(site_url('account/settings')) ?>" title="Account Settings">
+                    <i class="bi bi-person-gear"></i>
+                    <span class="nav-text">Account Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= esc(route_to('logout')) ?>" title="Logout">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span class="nav-text">Logout</span>
+                </a>
+            </li>
         </ul>
     </nav>
 </aside>

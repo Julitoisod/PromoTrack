@@ -62,6 +62,37 @@ $choiceGroup = static function (string $name, array $options, ?string $current, 
         </div>
     </div>
 
+    <?php
+    // Certificate of Registration for the semester the student is in now.
+    $corState = $cor === null || $cor['cor_path'] === null
+        ? ['Not uploaded', 'secondary']
+        : (App\Models\StudentEnrollmentModel::STATUSES[$cor['status']] ?? ['Pending', 'warning']);
+    ?>
+    <div class="card portal-card mb-3 cor-card">
+        <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+            <span><i class="bi bi-file-earmark-text me-1"></i> Certificate of Registration (COR) &middot; <?= esc($reservist->student_year_level) ?></span>
+            <span class="badge text-bg-<?= esc($corState[1]) ?>"><?= esc($corState[0]) ?></span>
+        </div>
+        <div class="card-body">
+            <?php if (($cor['status'] ?? null) === 'verified'): ?>
+                <p class="mb-2 text-success"><i class="bi bi-check-circle-fill me-1"></i> Your enrollment for this semester is verified.</p>
+            <?php elseif (($cor['status'] ?? null) === 'rejected'): ?>
+                <p class="mb-2 text-danger"><i class="bi bi-exclamation-circle-fill me-1"></i> Your COR was not accepted. Upload a clear copy.</p>
+            <?php else: ?>
+                <p class="mb-2 text-muted">Upload your COR for this semester so your enrollment can be verified.</p>
+            <?php endif; ?>
+
+            <form method="post" action="<?= esc(site_url('my/cor')) ?>" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-center">
+                <?= csrf_field() ?>
+                <input type="file" class="form-control form-control-sm w-auto" name="cor" accept=".pdf,.jpg,.jpeg,.png" required aria-label="COR file">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-upload me-1"></i> <?= $cor !== null && $cor['cor_path'] !== null ? 'Replace COR' : 'Upload COR' ?></button>
+                <?php if ($cor !== null && $cor['cor_path'] !== null): ?>
+                    <a href="<?= esc(site_url('my/cor')) ?>" target="_blank" rel="noopener" class="small ms-1"><i class="bi bi-paperclip"></i> <?= esc($cor['cor_filename'] ?? 'View COR') ?></a>
+                <?php endif; ?>
+            </form>
+        </div>
+    </div>
+
     <div class="rotc-ladder">
         <?php foreach ($rotc['stages'] as $code => $stage): ?>
             <?php

@@ -2,9 +2,55 @@
 
 <?= $this->section('content') ?>
 <?php $dashUser = auth()->user(); ?>
+<?php if ($admin !== null): ?>
+    <?php // Admin panel layout from the client brief of 2026-11-10. ?>
+    <section class="admin-hero">
+        <div>
+            <h1>Welcome, Administrator!</h1>
+            <p class="admin-hero-sub">AFP Reserve Force &ndash; PromoTrack Admin Panel</p>
+        </div>
+        <div class="admin-hero-date">
+            <i class="bi bi-calendar3 me-1"></i> <?= esc(date('l, F j, Y')) ?>
+        </div>
+    </section>
+
+    <div class="row g-3 mb-4 admin-stats">
+        <?php foreach ([
+            ['Registrants', $admin['counts']['registrants'], 'bi-person-plus-fill', 'admin/registrations', 'tile-blue'],
+            ['Student Reservists', $admin['counts']['students'], 'bi-mortarboard-fill', 'admin/enrollment', 'tile-green'],
+            ['Regular Reservists', $admin['counts']['regular'], 'bi-people-fill', 'admin/regular-reservists', 'tile-purple'],
+            ['Standby Reservists', $admin['counts']['standby'], 'bi-shield', 'admin/classification/standby', 'tile-warning'],
+            ['Ready Reserve Reservists', $admin['counts']['ready_reserve'], 'bi-shield-fill-check', 'admin/classification/ready_reserve', 'tile-success'],
+        ] as [$label, $value, $icon, $link, $tone]): ?>
+            <div class="col-6 col-lg">
+                <a class="portal-tile admin-stat <?= esc($tone) ?>" href="<?= esc(site_url($link)) ?>">
+                    <i class="bi <?= esc($icon) ?>" aria-hidden="true"></i>
+                    <div class="tile-value"><?= esc((string) $value) ?></div>
+                    <div class="tile-label">Total <?= esc($label) ?></div>
+                </a>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <div class="section-head">
+        <h2><i class="bi bi-folder2-open me-1"></i> Student Reservist Enrollment</h2>
+        <a href="<?= esc(site_url('admin/enrollment')) ?>" class="portal-link">All folders <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <?= view('admin/enrollment/_folders', ['folders' => $admin['folders']]) ?>
+
+    <div class="section-head mt-4">
+        <h2><i class="bi bi-diagram-2 me-1"></i> Reservist Classification</h2>
+    </div>
+    <?= view('admin/reservists/_classification_folders', ['counts' => ['standby' => $admin['counts']['standby'], 'ready_reserve' => $admin['counts']['ready_reserve']]]) ?>
+
+    <div class="section-head mt-4">
+        <h2><i class="bi bi-graph-up-arrow me-1"></i> Promotion Workflow</h2>
+    </div>
+<?php else: ?>
 <div class="page-head">
     <h1 class="page-title">Welcome, <?= esc($dashUser->username ?? $dashUser->email ?? 'User') ?></h1>
 </div>
+<?php endif; ?>
 
 <div class="row g-3 mb-3">
     <?php // One tile per headline figure; the four differ only by label, value and accent.
